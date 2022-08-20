@@ -55,7 +55,7 @@ pluginBundle {
     website = "https://${PluginInfo.VCS}"
     vcsUrl = "https://${PluginInfo.VCS}"
     description = PluginInfo.DESCRIPTION
-    tags = listOf("plugin", "gradle", "dkim")
+    tags = listOf("dkim")
 }
 
 val sourcesJar by tasks.creating(Jar::class) {
