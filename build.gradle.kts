@@ -6,6 +6,7 @@ plugins {
     `java-gradle-plugin`
     kotlin("jvm") version "1.7.10"
     id("org.jetbrains.dokka") version "1.7.10"
+    id("org.cadixdev.licenser") version "0.6.1"
     id("com.gradle.plugin-publish") version "1.0.0"
 }
 
@@ -33,6 +34,11 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 }
 
+license {
+    header.set(rootProject.resources.text.fromFile("LICENSE"))
+    include("**/*.kt", "**/*.groovy")
+}
+
 private object PluginInfo {
     const val ARTIFACT_ID = "dkim-gradle"
     const val DESCRIPTION = "Gradle plugin helpful in creating plugins"
@@ -56,16 +62,6 @@ pluginBundle {
     vcsUrl = "https://${PluginInfo.VCS}"
     description = PluginInfo.DESCRIPTION
     tags = listOf("dkim")
-}
-
-val sourcesJar by tasks.creating(Jar::class) {
-    archiveClassifier.set("sources")
-    from(sourceSets.main.get().allSource.srcDirs)
-}
-
-val javadocJar by tasks.creating(Jar::class) {
-    archiveClassifier.set("javadoc")
-    from(tasks.dokkaJavadoc)
 }
 
 publishing {
