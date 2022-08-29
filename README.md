@@ -1,4 +1,5 @@
 ![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/io.github.dkim19375.dkim-gradle?label=Gradle%20Plugin%20Portal)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/dkim19375/DkimGradle/Testing%20CI%20with%20Gradle)
 # DkimGradle
 Gradle plugin for Spigot plugins
 
