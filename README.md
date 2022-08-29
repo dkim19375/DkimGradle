@@ -1,3 +1,4 @@
+![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/io.github.dkim19375.dkim-gradle?label=Gradle%20Plugin%20Portal)
 # DkimGradle
 Gradle plugin for Spigot plugins
 
@@ -6,7 +7,6 @@ This plugin gives you some utilities which can help with creating projects or pl
 ### Currently only supports Kotlin DSL
 
 ## Installation
-(Required to be in local maven repository until published to the Gradle Plugin Repository)
 ### `build.gradle.kts`
 ```kotlin
 plugins {
