@@ -115,7 +115,7 @@ fun Project.deleteAllTask(
     }
 }
 
-@Suppress("UNUSED_VARIABLE", "UNUSED_EXPRESSION", "KotlinRedundantDiagnosticSuppress") // needed for the delegates
+@Suppress("UNUSED_VARIABLE")
 @API
 fun Project.setupTasksForMC(
     serverFoldersRoot: String,
@@ -131,7 +131,6 @@ fun Project.setupTasksForMC(
 ) {
     addReplacementsTask()
     val removeBuildJars by removeBuildJarsTask()
-    removeBuildJars
     val serverRoot = serverFoldersRoot.removeSuffix("/").removeSuffix("\\")
     val deleteAll by deleteAllTask(
         deleteFilesInDirectories = serverFolderNames.map { folderName ->
@@ -140,11 +139,9 @@ fun Project.setupTasksForMC(
         fileName = jarFileName,
         dependsOnTask = dependsOnTask,
     )
-    deleteAll
     val copyFile by copyFileTask(
         copyToDirectory = "$serverRoot/$mainServerName/plugins",
         dependsOnTask = deleteAll,
         jar = jar
     )
-    copyFile
 }

@@ -26,13 +26,17 @@ package me.dkim19375.dkimgradle.delegate
 
 import org.gradle.api.Project
 import org.gradle.api.Task
+import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
 class TaskRegisterDelegate(
     private val project: Project,
     private val action: Task.(String) -> Unit,
-) {
-    operator fun getValue(ref: Any?, prop: KProperty<*>): Task = project.tasks.register(prop.name) {
-        action(this, prop.name)
+) : ReadOnlyProperty<Any?, Task> {
+    operator fun provideDelegate(ref: Any?, prop: KProperty<*>): ReadOnlyProperty<Any?, Task> =
+        TaskRegisterDelegate(project, action)
+
+    override fun getValue(thisRef: Any?, property: KProperty<*>): Task = project.tasks.register(property.name) {
+        action(this, property.name)
     }.get()
 }
