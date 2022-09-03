@@ -28,12 +28,12 @@ repositories {
     maven(Repository.SPIGOT)
 }
 ```
-Even better, you can add **all** of the repositories at once:
+Even better, you can add **all** the repositories at once:
 ```kotlin
 repositories {
     mavenCentral() // mavenCentral not included in mavenAll()
     mavenLocal() // mavenLocal not included in mavenAll()
-    mavenAll() // adds all of the repositories in the Repository enum
+    mavenAll() // adds all the repositories in the Repository enum
 }
 ```
 ### Dependencies
@@ -73,7 +73,7 @@ dependencies {
     compileOnly(spigotAPI(MinecraftVersion.V1_19_2)) // Spigot API for 1.19.2
     
     // Spigot NMS for 1.19.2
-    // Does not require any of the repositories above
+    // Does not require any of the repositories above,
     // but you must have run BuildTools for the current version
     compileOnly(spigotNMS(MinecraftVersion.V1_19_2)) // Spigot NMS for 1.19.2
     
@@ -85,3 +85,9 @@ dependencies {
     paperDevBundle(getVersionString(MinecraftVersion.V1_19_2))
 }
 ```
+### Common Scripts/Tasks
+To avoid having to keep having the same tasks in every project,
+this plugin can provide some in order to make it easier and quicker to set up new projects.
+
+The list and documentation can be found 
+[here](https://github.com/dkim19375/DkimGradle/blob/master/src/main/kotlin/me/dkim19375/dkimgradle/util/CommonScripts.kt).

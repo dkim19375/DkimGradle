@@ -158,11 +158,11 @@ fun Project.deleteAllTask(
  *         jar = { reobfJar.get().outputJar.get().asFile } // for PaperWeight
  *     )
  *
- * @param serverFoldersRoot The folder which holds the other servers (for deleteAllTask)
- * @param serverFolderNames The names of the other servers (for deleteAllTask)
- * @param mainServerName The server folder name that you want to copy the jar to (for copyFileTask)
- * @param jarFileName The base name of the jar file (for copyFileTask)
- * @param dependsOnTask The task that you want the deleteAll task to depend on
+ * @param serverFoldersRoot The folder which holds the other servers (for [deleteAllTask])
+ * @param serverFolderNames The names of the other servers (for [deleteAllTask])
+ * @param mainServerName The server folder name that you want to copy the jar to (for [copyFileTask])
+ * @param jarFileName The base name of the jar file (for [copyFileTask])
+ * @param dependsOnTask The task that you want the [deleteAll task][deleteAllTask] to depend on
  * @param jar A function that returns the built jar file
  */
 @Suppress("UNUSED_VARIABLE")
