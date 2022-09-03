@@ -32,6 +32,11 @@ import org.gradle.api.tasks.Copy
 import org.gradle.kotlin.dsl.named
 import java.io.File
 
+/**
+ * Configures the ProcessResources [Task] to add replacements
+ *
+ * @param replacements A [Map] of all the replacements
+ */
 fun Project.addReplacementsTask(
     replacements: Map<String, () -> String> = mapOf(
         "pluginVersion" to version::toString
@@ -43,6 +48,12 @@ fun Project.addReplacementsTask(
     }
 }
 
+/**
+ * Deletes ALL files in the specified [directory]
+ *
+ * @param directory The directory to delete the files from (default is "build/libs")
+ * @return The [Task] that deletes the files
+ */
 fun Project.removeBuildJarsTask(directory: String = "build/libs"): TaskRegisterDelegate = TaskRegisterDelegate(this) {
     project.tasks.findByName("classes")?.also { classes ->
         classes.dependsOn(this@TaskRegisterDelegate)
@@ -52,6 +63,14 @@ fun Project.removeBuildJarsTask(directory: String = "build/libs"): TaskRegisterD
     }
 }
 
+/**
+ * Copies the [built file][jar] to the [directory][copyToDirectory]
+ *
+ * @param copyToDirectory The directory to copy the built file to
+ * @param dependsOnTask The task that should run after this task, or null if non should be run
+ * @param jar The [File] to copy
+ * @return the [Task] that copies the file
+ */
 fun Project.copyFileTask(
     copyToDirectory: String,
     dependsOnTask: Task? = run {
@@ -74,6 +93,17 @@ fun Project.copyFileTask(
     }
 }
 
+/**
+ * Deletes matching jar files in [deleteFilesInDirectories]
+ *
+ * @param deleteFilesInDirectories Directories to search
+ * @param fileName The base file name to search for (exact if [exactName] is true, otherwise startsWith)
+ * @param dependsOnTask The task that should run after this task, or null if non should be run
+ * @param exactName Whether the file name should be exact or should check if the file name
+ * starts with [fileName]
+ * @param ignoreCase Whether the file name check should ignore the case
+ * @return The [Task] that deletes the files
+ */
 fun Project.deleteAllTask(
     deleteFilesInDirectories: Collection<String>,
     fileName: String,
@@ -115,6 +145,26 @@ fun Project.deleteAllTask(
     }
 }
 
+/**
+ * A function that calls the other functions for you
+ *
+ * Example:
+ *
+ *     setupTasksForMC(
+ *         serverFoldersRoot = "../.TestServers",
+ *         serverFolderNames = listOf("1.8", "1.19"),
+ *         mainServerName = "1.19",
+ *         jarFileName = shadowJar.get().archiveBaseName.get(), // for Shadow
+ *         jar = { reobfJar.get().outputJar.get().asFile } // for PaperWeight
+ *     )
+ *
+ * @param serverFoldersRoot The folder which holds the other servers (for deleteAllTask)
+ * @param serverFolderNames The names of the other servers (for deleteAllTask)
+ * @param mainServerName The server folder name that you want to copy the jar to (for copyFileTask)
+ * @param jarFileName The base name of the jar file (for copyFileTask)
+ * @param dependsOnTask The task that you want the deleteAll task to depend on
+ * @param jar A function that returns the built jar file
+ */
 @Suppress("UNUSED_VARIABLE")
 @API
 fun Project.setupTasksForMC(
