@@ -33,10 +33,16 @@ class TaskRegisterDelegate(
     private val project: Project,
     private val action: Task.(String) -> Unit,
 ) : ReadOnlyProperty<Any?, Task> {
-    operator fun provideDelegate(ref: Any?, prop: KProperty<*>): ReadOnlyProperty<Any?, Task> =
-        TaskRegisterDelegate(project, action)
+    private var task: Task? = null
 
-    override fun getValue(thisRef: Any?, property: KProperty<*>): Task = project.tasks.register(property.name) {
-        action(this, property.name)
-    }.get()
+    operator fun provideDelegate(ref: Any?, property: KProperty<*>): ReadOnlyProperty<Any?, Task> {
+        task = project.tasks.register(property.name) {
+            action(this, property.name)
+        }.get()
+        return this
+    }
+
+    override fun getValue(thisRef: Any?, property: KProperty<*>): Task = task ?: throw IllegalStateException(
+        s = "Task not initialized yet! (provideDelegate wasn't called)"
+    )
 }
