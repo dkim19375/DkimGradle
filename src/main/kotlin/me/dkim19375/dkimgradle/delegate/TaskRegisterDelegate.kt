@@ -43,6 +43,6 @@ class TaskRegisterDelegate(
     }
 
     override fun getValue(thisRef: Any?, property: KProperty<*>): Task = task ?: throw IllegalStateException(
-        s = "Task not initialized yet! (provideDelegate wasn't called)"
+        "Task not initialized yet! (provideDelegate wasn't called)"
     )
 }
