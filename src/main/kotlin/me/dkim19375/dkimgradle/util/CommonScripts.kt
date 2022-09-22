@@ -44,7 +44,7 @@ fun Project.addReplacementsTask(
 ) {
     tasks.named<Copy>("processResources") {
         outputs.upToDateWhen { false }
-        expand(replacements.mapValues(Map.Entry<*, () -> String>::value))
+        expand(replacements.mapValues { it.value() })
     }
 }
 
