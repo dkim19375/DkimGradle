@@ -177,9 +177,12 @@ fun Project.setupTasksForMC(
         taskNames.mapNotNull(tasks::findByName).firstOrNull()
             ?: throw IllegalStateException("No default dependsOn task found!")
     },
+    replacements: Map<String, () -> String> = mapOf(
+        "pluginVersion" to version::toString
+    ),
     jar: () -> File,
 ) {
-    addReplacementsTask()
+    addReplacementsTask(replacements)
     val removeBuildJars by removeBuildJarsTask()
     val serverRoot = serverFoldersRoot.removeSuffix("/").removeSuffix("\\")
     val deleteAll by deleteAllTask(
