@@ -5,7 +5,7 @@ plugins {
     `maven-publish`
     `java-gradle-plugin`
     kotlin("jvm") version "1.8.10"
-    id("org.jetbrains.dokka") version "1.7.20"
+    id("org.jetbrains.dokka") version "1.8.10"
     id("org.cadixdev.licenser") version "0.6.1"
     id("com.gradle.plugin-publish") version "1.2.0"
 }
