@@ -45,23 +45,21 @@ private object PluginInfo {
     const val VCS = "github.com/dkim19375/DkimGradle"
 }
 
+@Suppress("UnstableApiUsage")
 gradlePlugin {
     isAutomatedPublishing = true
+    website.set("https://${PluginInfo.VCS}")
+    vcsUrl.set("https://${PluginInfo.VCS}")
     plugins {
         create(PluginInfo.ARTIFACT_ID) {
             id = "io.github.dkim19375.${PluginInfo.ARTIFACT_ID}"
             implementationClass = "me.dkim19375.dkimgradle.DkimGradlePlugin"
             version = project.version
             displayName = "Dkim Gradle Plugin"
+            description = PluginInfo.DESCRIPTION
+            tags.set(listOf("dkim"))
         }
     }
-}
-
-pluginBundle {
-    website = "https://${PluginInfo.VCS}"
-    vcsUrl = "https://${PluginInfo.VCS}"
-    description = PluginInfo.DESCRIPTION
-    tags = listOf("dkim")
 }
 
 publishing {
