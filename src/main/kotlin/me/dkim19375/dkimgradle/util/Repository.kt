@@ -50,14 +50,16 @@ enum class Repository(internal val url: String) {
     MULTIVERSE("https://repo.onarandombox.com/content/groups/public/"),
     EXTENDED_CLIP("https://repo.extendedclip.com/content/repositories/public/"),
     ENGINE_HUB("https://maven.enginehub.org/repo/"),
+    REDEMPT("https://redempt.dev/"),
 
     // keep at bottom
     ESSENTIALS_RELEASES("https://repo.essentialsx.net/releases/"),
     ESSENTIALS_SNAPSHOTS("https://repo.essentialsx.net/snapshots/"),
 }
 
-fun RepositoryHandler.mavenAll(): Map<Repository, MavenArtifactRepository> = Repository.values().associateWith {
-    maven(it.url)
-}
+fun RepositoryHandler.mavenAll(vararg exclude: Repository): Map<Repository, MavenArtifactRepository> =
+    Repository.values().filterNot(exclude::contains).associateWith {
+        maven(it.url)
+    }
 
 fun RepositoryHandler.maven(repository: Repository): MavenArtifactRepository = maven(repository.url)
