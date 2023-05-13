@@ -51,6 +51,8 @@ enum class Repository(internal val url: String) {
     EXTENDED_CLIP("https://repo.extendedclip.com/content/repositories/public/"),
     ENGINE_HUB("https://maven.enginehub.org/repo/"),
     REDEMPT("https://redempt.dev/"),
+    KRYPTON_RELEASES("https://repo.kryptonmc.org/releases/"),
+    KRYPTON_SNAPSHOTS("https://repo.kryptonmc.org/snapshots/"),
 
     // keep at bottom
     ESSENTIALS_RELEASES("https://repo.essentialsx.net/releases/"),
