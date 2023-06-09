@@ -24,7 +24,7 @@
 
 @file:Suppress("unused")
 
-package me.dkim19375.dkimgradle.util
+package me.dkim19375.dkimgradle.enums
 
 import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
