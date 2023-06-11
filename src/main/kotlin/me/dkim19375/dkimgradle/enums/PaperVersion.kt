@@ -27,5 +27,33 @@ package me.dkim19375.dkimgradle.enums
 enum class PaperVersion(val groupID: String, val artifactID: String) {
     BELOW_1_9("org.github.paperspigot", "paperspigot-api"),
     BELOW_1_17("com.destroystokyo.paper", "paper-api"),
-    REST("io.papermc.paper", "paper-api"),
+    REST("io.papermc.paper", "paper-api");
+}
+
+fun getPaperVersion(version: String): PaperVersion {
+    // Split version string
+    val versionSplit = version.split(".")
+    if (versionSplit.size < 2) {
+        println("Failed to parse Paper Minecraft version: $version")
+        return PaperVersion.BELOW_1_9
+    }
+
+    // Get major and minor version
+    val major: Int
+    val minor: Int
+    try {
+        major = versionSplit[0].toInt()
+        minor = versionSplit[1].toInt()
+    } catch (e: NumberFormatException) {
+        println("Failed to parse Paper Minecraft version: $version")
+        return PaperVersion.BELOW_1_9
+    }
+
+    // Return correct PaperVersion
+    if (major < 1) return PaperVersion.BELOW_1_9
+    if (major == 1) {
+        if (minor < 9) return PaperVersion.BELOW_1_9
+        if (minor < 17) return PaperVersion.BELOW_1_17
+    }
+    return PaperVersion.REST
 }

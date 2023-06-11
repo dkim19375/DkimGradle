@@ -26,17 +26,20 @@
 
 package me.dkim19375.dkimgradle.util
 
-import me.dkim19375.dkimgradle.enums.MinecraftVersion
+import me.dkim19375.dkimgradle.enums.PaperVersion
+import me.dkim19375.dkimgradle.enums.getPaperVersion
 import org.gradle.api.artifacts.dsl.DependencyHandler
 
-fun DependencyHandler.spigotAPI(version: MinecraftVersion): String =
-    "org.spigotmc:spigot-api:${version.version}-R0.1-SNAPSHOT"
+fun DependencyHandler.spigotAPI(version: String): String =
+    "org.spigotmc:spigot-api:${getVersionString(version)}"
 
-fun DependencyHandler.spigotNMS(version: MinecraftVersion): String =
-    "org.spigotmc:spigot:${version.version}-R0.1-SNAPSHOT"
+fun DependencyHandler.spigotNMS(version: String): String =
+    "org.spigotmc:spigot:${getVersionString(version)}"
 
-fun DependencyHandler.paper(version: MinecraftVersion): String =
-    "${version.type.groupID}:${version.type.artifactID}:${getVersionString(version)}"
+fun DependencyHandler.paper(version: String): String {
+    val paperVersion: PaperVersion = getPaperVersion(version)
+    return "${paperVersion.groupID}:${paperVersion.artifactID}:${getVersionString(version)}"
+}
 
-fun DependencyHandler.getVersionString(version: MinecraftVersion): String =
-    "${version.version}-R0.1-SNAPSHOT"
+fun DependencyHandler.getVersionString(version: String): String =
+    "${version}-R0.1-SNAPSHOT"
