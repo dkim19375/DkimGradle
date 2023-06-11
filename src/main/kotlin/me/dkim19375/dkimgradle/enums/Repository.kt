@@ -59,9 +59,12 @@ enum class Repository(internal val url: String) {
     ESSENTIALS_SNAPSHOTS("https://repo.essentialsx.net/snapshots/"),
 }
 
+fun RepositoryHandler.maven(vararg repositories: Repository): Map<Repository, MavenArtifactRepository> =
+    repositories.associateWith {
+        maven(it.url)
+    }
+
 fun RepositoryHandler.mavenAll(vararg exclude: Repository): Map<Repository, MavenArtifactRepository> =
     Repository.values().filterNot(exclude::contains).associateWith {
         maven(it.url)
     }
-
-fun RepositoryHandler.maven(repository: Repository): MavenArtifactRepository = maven(repository.url)
