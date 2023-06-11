@@ -27,7 +27,6 @@
 package me.dkim19375.dkimgradle.util
 
 import me.dkim19375.dkimgradle.enums.PaperVersion
-import me.dkim19375.dkimgradle.enums.getPaperVersion
 import org.gradle.api.artifacts.dsl.DependencyHandler
 
 fun DependencyHandler.spigotAPI(version: String): String =
@@ -37,7 +36,7 @@ fun DependencyHandler.spigotNMS(version: String): String =
     "org.spigotmc:spigot:${getVersionString(version)}"
 
 fun DependencyHandler.paper(version: String): String {
-    val paperVersion: PaperVersion = getPaperVersion(version)
+    val paperVersion: PaperVersion = PaperVersion.parse(version)
     return "${paperVersion.groupID}:${paperVersion.artifactID}:${getVersionString(version)}"
 }
 

@@ -27,33 +27,37 @@ package me.dkim19375.dkimgradle.enums
 enum class PaperVersion(val groupID: String, val artifactID: String) {
     BELOW_1_9("org.github.paperspigot", "paperspigot-api"),
     BELOW_1_17("com.destroystokyo.paper", "paper-api"),
-    REST("io.papermc.paper", "paper-api");
-}
+    REST("io.papermc.paper", "paper-api"),
+    ;
 
-fun getPaperVersion(version: String): PaperVersion {
-    // Split version string
-    val versionSplit = version.split(".")
-    if (versionSplit.size < 2) {
-        println("Failed to parse Paper Minecraft version: $version")
-        return PaperVersion.BELOW_1_9
-    }
+    companion object {
+        fun parse(version: String): PaperVersion {
+            // Split version string
+            val versionSplit = version.split('.')
+            require(versionSplit.size >= 2) { "Failed to parse Paper Minecraft version (invalid version string): $version" }
 
-    // Get major and minor version
-    val major: Int
-    val minor: Int
-    try {
-        major = versionSplit[0].toInt()
-        minor = versionSplit[1].toInt()
-    } catch (e: NumberFormatException) {
-        println("Failed to parse Paper Minecraft version: $version")
-        return PaperVersion.BELOW_1_9
-    }
+            // Get major and minor version
+            val (major, minor) = runCatching {
+                versionSplit[0].toInt() to versionSplit[1].toInt()
+            }.getOrElse {
+                throw IllegalArgumentException("Failed to parse Paper Minecraft version (invalid version numbers): $version")
+            }
+            val patch = runCatching {
+                versionSplit.getOrNull(2)?.toInt()
+            }.getOrElse {
+                throw IllegalArgumentException("Failed to parse Paper Minecraft version (invalid version numbers): $version")
+            }
 
-    // Return correct PaperVersion
-    if (major < 1) return PaperVersion.BELOW_1_9
-    if (major == 1) {
-        if (minor < 9) return PaperVersion.BELOW_1_9
-        if (minor < 17) return PaperVersion.BELOW_1_17
+            // Return correct PaperVersion
+            require(major >= 1) { "Invalid Paper Minecraft version (invalid major version): $version" }
+            require(minor >= 7) { "Invalid Paper Minecraft version (invalid minor version): $version" }
+            require(patch == null || patch >= 0) { "Invalid Paper Minecraft version (invalid patch version): $version" }
+            return when {
+                major != 1 -> REST
+                minor < 9 -> BELOW_1_9
+                minor < 17 -> BELOW_1_17
+                else -> REST
+            }
+        }
     }
-    return PaperVersion.REST
 }
