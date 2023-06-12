@@ -26,11 +26,13 @@
 
 package me.dkim19375.dkimgradle.enums
 
+import org.gradle.api.artifacts.ArtifactRepositoryContainer
 import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.kotlin.dsl.maven
 
 enum class Repository(internal val url: String) {
+    MAVEN_CENTRAL(ArtifactRepositoryContainer.MAVEN_CENTRAL_URL),
     SPIGOT("https://hub.spigotmc.org/nexus/content/repositories/snapshots/"),
     PAPER("https://repo.papermc.io/repository/maven-public/"),
     JITPACK("https://jitpack.io/"),
