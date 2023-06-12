@@ -35,18 +35,9 @@ import org.gradle.language.jvm.tasks.ProcessResources
 import java.io.File
 
 /**
- * Sets up the project with the specified [group] and [version]
- *
- * Adds the text encoding, replacements, and build shadow task (if the Shadow plugin is applied)
+ * Checks if the project is using Kotlin
  */
-fun Project.setup(group: String, version: String) {
-    this.group = group
-    this.version = version
-    // Tasks
-    addTextEncodingTask()
-    addReplacementsTask()
-    if (hasShadowPlugin()) addBuildShadowTask()
-}
+fun Project.isKotlin(): Boolean = plugins.hasPlugin("org.jetbrains.kotlin.jvm") || file("src/main/kotlin").exists()
 
 /**
  * Checks if the Shadow plugin is applied
@@ -62,10 +53,25 @@ fun Project.addBuildShadowTask() {
 }
 
 /**
- * Adds the task to set the text encoding to UTF-8
+ * Sets the text encoding for the project
+ *
+ * @param encoding The encoding to set
  */
-fun Project.addTextEncodingTask() {
-    tasks.named<JavaCompile>("compileJava") { options.encoding = "UTF-8" }
+fun Project.setTextEncoding(encoding: String = "UTF-8") {
+    tasks.named<JavaCompile>("compileJava") { options.encoding = encoding }
+}
+
+/**
+ * Sets the Java/Kotlin version for the project
+ *
+ * @param version The version to set (example: `1.8`)
+ */
+fun Project.setLanguageVersion(version: String = if (isKotlin()) "1.8.22" else "1.8") {
+    if (isKotlin()) {
+        // TODO
+        return
+    }
+    tasks.named<JavaCompile>("compileJava") { sourceCompatibility = version }
 }
 
 /**
@@ -80,7 +86,7 @@ fun Project.addReplacementsTask(
     )) {
     tasks.named<ProcessResources>("processResources") {
         outputs.upToDateWhen { false }
-        filesMatching("**/plugin.yml") { expand(replacements.mapValues { it.value() }) }
+        expand(replacements.mapValues { it.value() })
     }
 }
 
@@ -197,7 +203,7 @@ fun Project.deleteAllTask(
  * @param serverFoldersRoot The folder which holds the other servers (for [deleteAllTask])
  * @param serverFolderNames The names of the other servers (for [deleteAllTask])
  * @param mainServerName The server folder name that you want to copy the jar to (for [copyFileTask])
- * @param jarFileName The base name of the jar file (for [copyFileTask])
+ * @param jarFileName The base name of the jar file (for [deleteAllTask] and [copyFileTask])
  * @param dependsOnTask The task that you want the [deleteAll task][deleteAllTask] to depend on
  * @param jar A function that returns the built jar file
  */
@@ -214,7 +220,8 @@ fun Project.setupTasksForMC(
             ?: throw IllegalStateException("No default dependsOn task found!")
     },
     replacements: Map<String, () -> String> = mapOf(
-        "pluginVersion" to version::toString
+        "name" to name::toString,
+        "version" to version::toString
     ),
     jar: () -> File,
 ) {
@@ -233,4 +240,23 @@ fun Project.setupTasksForMC(
         dependsOnTask = deleteAll,
         jar = jar
     )
+}
+
+/**
+ * Sets up the project with the specified [group] and [version] for a simple Minecraft project
+ *
+ * Adds the text encoding, replacements, and build shadow task (if the Shadow plugin is applied)
+ *
+ * @param group The group of the project (example: `me.dkim19375`)
+ * @param version The version of the project (example: `1.0.0`)
+ * @param languageVersion The language version of the project (example: `1.8`)
+ */
+fun Project.setupMCSimple(group: String, version: String = "0.0.1", languageVersion: String) {
+    this.group = group
+    this.version = version
+    // Tasks
+    setTextEncoding()
+    setLanguageVersion(languageVersion)
+    addReplacementsTask()
+    if (hasShadowPlugin()) addBuildShadowTask()
 }
