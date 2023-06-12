@@ -26,11 +26,47 @@ package me.dkim19375.dkimgradle.util
 
 import me.dkim19375.dkimgradle.annotation.API
 import me.dkim19375.dkimgradle.delegate.TaskRegisterDelegate
+import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.named
+import org.gradle.language.jvm.tasks.ProcessResources
 import java.io.File
+
+/**
+ * Sets up the project with the specified [group] and [version]
+ *
+ * Adds the text encoding, replacements, and build shadow task (if the Shadow plugin is applied)
+ */
+fun Project.setup(group: String, version: String) {
+    this.group = group
+    this.version = version
+    // Tasks
+    addTextEncodingTask()
+    addReplacementsTask()
+    if (hasShadowPlugin()) addBuildShadowTask()
+}
+
+/**
+ * Checks if the Shadow plugin is applied
+ */
+fun Project.hasShadowPlugin(): Boolean = plugins.hasPlugin("com.github.johnrengelman.shadow")
+
+/**
+ * Adds the task that makes `gradle build` run `gradle shadowJar`
+ */
+fun Project.addBuildShadowTask() {
+    check(hasShadowPlugin()) { "Shadow plugin is not applied!" }
+    tasks.named<DefaultTask>("build") { dependsOn("shadowJar") }
+}
+
+/**
+ * Adds the task to set the text encoding to UTF-8
+ */
+fun Project.addTextEncodingTask() {
+    tasks.named<JavaCompile>("compileJava") { options.encoding = "UTF-8" }
+}
 
 /**
  * Configures the ProcessResources [Task] to add replacements
@@ -39,12 +75,12 @@ import java.io.File
  */
 fun Project.addReplacementsTask(
     replacements: Map<String, () -> String> = mapOf(
-        "pluginVersion" to version::toString
-    ),
-) {
-    tasks.named<Copy>("processResources") {
+        "name" to name::toString,
+        "version" to version::toString
+    )) {
+    tasks.named<ProcessResources>("processResources") {
         outputs.upToDateWhen { false }
-        expand(replacements.mapValues { it.value() })
+        filesMatching("**/plugin.yml") { expand(replacements.mapValues { it.value() }) }
     }
 }
 
