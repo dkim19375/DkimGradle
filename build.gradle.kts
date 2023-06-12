@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "me.dkim19375"
-version = "1.1.4"
+version = "1.2.0"
 
 tasks.withType<JavaCompile> {
     sourceCompatibility = "1.8"
