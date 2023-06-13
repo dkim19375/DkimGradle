@@ -31,9 +31,11 @@ repositories {
 Even better, you can add **all** the repositories at once:
 ```kotlin
 repositories {
-    mavenCentral() // mavenCentral not included in mavenAll()
-    mavenLocal() // mavenLocal not included in mavenAll()
-    mavenAll() // adds all the repositories in the Repository enum
+    // adds all the repositories in the Repository enum
+    // mavenCentral is included in mavenAll()
+    mavenAll()
+    
+    mavenLocal() // mavenLocal is not included in mavenAll()
 }
 ```
 ### Dependencies
@@ -62,27 +64,28 @@ plugins {
 repositories {
     mavenLocal() // required for Spigot NMS
     mavenCentral() // required for Spigot API and Paper API dependencies
+    // maven(Repository.MAVEN_CENTRAL) also works
     maven(Repository.SPIGOT) // required for Spigot API
     maven(Repository.PAPER) // required for Paper API
     
-    // or replace two maven(Repository) calls with:
+    // or replace mavenCentral() and the two maven(Repository) calls with:
     mavenAll()
 }
 
 dependencies {
-    compileOnly(spigotAPI(MinecraftVersion.V1_19_2)) // Spigot API for 1.19.2
+    compileOnly(spigotAPI("1.19.4")) // Spigot API for 1.19.4
     
-    // Spigot NMS for 1.19.2
-    // Does not require any of the repositories above,
+    // Spigot NMS for 1.19.4
+    // Does not require any of the repositories above (besides mavenLocal()),
     // but you must have run BuildTools for the current version
-    compileOnly(spigotNMS(MinecraftVersion.V1_19_2)) // Spigot NMS for 1.19.2
+    compileOnly(spigotNMS("1.19.4")) // Spigot NMS for 1.19.4
     
-    compileOnly(paper(MinecraftVersion.V1_19_2)) // Paper API for 1.19.2
+    compileOnly(paper("1.19.4")) // Paper API for 1.19.4
     
-    // Example return value: "1.19.2-R0.1-SNAPSHOT"
-    val versionStr: String = getVersionString(MinecraftVersion.V1_19_2)
+    // Example return value: "1.19.4-R0.1-SNAPSHOT"
+    val versionStr: String = getVersionString("1.19.4")
     // Example usage that provides Paper NMS: (requires Paperweight)
-    paperDevBundle(getVersionString(MinecraftVersion.V1_19_2))
+    paperDevBundle(getVersionString("1.19.4"))
 }
 ```
 ### Common Scripts/Tasks
