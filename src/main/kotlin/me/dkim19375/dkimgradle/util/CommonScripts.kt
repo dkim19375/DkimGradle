@@ -29,15 +29,25 @@ import me.dkim19375.dkimgradle.delegate.TaskRegisterDelegate
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.named
-import org.gradle.language.jvm.tasks.ProcessResources
+import org.gradle.kotlin.dsl.withType
 import java.io.File
 
 /**
  * Checks if the project is using Kotlin
  */
-fun Project.isKotlin(): Boolean = plugins.hasPlugin("org.jetbrains.kotlin.jvm") || file("src/main/kotlin").exists()
+@API
+fun Project.isKotlin(): Boolean = setOf(
+    "org.jetbrains.kotlin.js",
+    "org.jetbrains.kotlin.jvm",
+    "org.jetbrains.kotlin.native",
+    "org.jetbrains.kotlin.android",
+    "org.jetbrains.kotlin.multiplatform",
+).any {
+    plugins.hasPlugin(it)
+}
 
 /**
  * Checks if the Shadow plugin is applied
@@ -58,22 +68,18 @@ fun Project.addBuildShadowTask() {
  * @param encoding The encoding to set
  */
 fun Project.setTextEncoding(encoding: String = "UTF-8") {
-    tasks.named<JavaCompile>("compileJava") { options.encoding = encoding }
+    tasks.withType<JavaCompile> { options.encoding = encoding }
 }
 
 /**
- * Sets the Java/Kotlin version for the project
+ * Sets the Java (and possibly Kotlin in the future) version for the project
  *
- * @param version The version to set (example: `1.8`)
+ * @param javaVersion The java version to set (example: `1.8`)
  */
-fun Project.setLanguageVersion(version: String = if (isKotlin()) "1.8.22" else "1.8") {
-    if (isKotlin()) {
-        // TODO
-        return
-    }
-    tasks.named<JavaCompile>("compileJava") {
-        sourceCompatibility = version
-        targetCompatibility = version
+fun Project.setLanguageVersion(javaVersion: String = "1.8") {
+    tasks.withType<JavaCompile> {
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
     }
 }
 
@@ -84,10 +90,9 @@ fun Project.setLanguageVersion(version: String = if (isKotlin()) "1.8.22" else "
  */
 fun Project.addReplacementsTask(
     replacements: Map<String, () -> String> = mapOf(
-        "name" to name::toString,
         "version" to version::toString
     )) {
-    tasks.named<ProcessResources>("processResources") {
+    tasks.named<Copy>("processResources") {
         outputs.upToDateWhen { false }
         expand(replacements.mapValues { it.value() })
     }
@@ -120,7 +125,7 @@ fun Project.copyFileTask(
     copyToDirectory: String,
     dependsOnTask: Task? = run {
         val taskNames = listOf("deleteAll", "reobfJar", "shadowJar", "build")
-        taskNames.mapNotNull(tasks::findByName).firstOrNull()
+        taskNames.firstNotNullOfOrNull(tasks::findByName)
             ?: throw IllegalStateException("No default dependsOn task found!")
     },
     jar: () -> File,
@@ -154,7 +159,7 @@ fun Project.deleteAllTask(
     fileName: String,
     dependsOnTask: Task? = run {
         val taskNames = listOf("reobfJar", "shadowJar", "build")
-        taskNames.mapNotNull(tasks::findByName).firstOrNull()
+        taskNames.firstNotNullOfOrNull(tasks::findByName)
             ?: throw IllegalStateException("No default dependsOn task found!")
     },
     exactName: Boolean = false,
@@ -219,16 +224,26 @@ fun Project.setupTasksForMC(
     jarFileName: String,
     dependsOnTask: Task? = run {
         val taskNames = listOf("reobfJar", "shadowJar", "build")
-        taskNames.mapNotNull(tasks::findByName).firstOrNull()
+        taskNames.firstNotNullOfOrNull(tasks::findByName)
             ?: throw IllegalStateException("No default dependsOn task found!")
     },
     replacements: Map<String, () -> String> = mapOf(
         "name" to name::toString,
-        "version" to version::toString
+        "version" to this.version::toString
     ),
+    group: String = this.group.toString(),
+    version: String = this.version.toString(),
+    javaVersion: String = "1.8",
+    textEncoding: String = "UTF-8",
     jar: () -> File,
 ) {
-    addReplacementsTask(replacements)
+    setupMCSimple(
+        group = group,
+        version = version,
+        javaVersion = javaVersion,
+        textEncoding = textEncoding,
+        replacements = replacements,
+    )
     val removeBuildJars by removeBuildJarsTask()
     val serverRoot = serverFoldersRoot.removeSuffix("/").removeSuffix("\\")
     val deleteAll by deleteAllTask(
@@ -252,14 +267,24 @@ fun Project.setupTasksForMC(
  *
  * @param group The group of the project (example: `me.dkim19375`)
  * @param version The version of the project (example: `1.0.0`)
- * @param languageVersion The language version of the project (example: `1.8`)
+ * @param javaVersion The java version of the project (example: `1.8`)
  */
-fun Project.setupMCSimple(group: String, version: String = "0.0.1", languageVersion: String) {
+@API
+fun Project.setupMCSimple(
+    group: String,
+    version: String = "1.0.0",
+    javaVersion: String = "1.8",
+    textEncoding: String = "UTF-8",
+    replacements: Map<String, () -> String> = mapOf(
+        "name" to name::toString,
+        "version" to version::toString
+    ),
+) {
     this.group = group
     this.version = version
     // Tasks
-    setTextEncoding()
-    setLanguageVersion(languageVersion)
-    addReplacementsTask()
+    setTextEncoding(textEncoding)
+    setLanguageVersion(javaVersion)
+    addReplacementsTask(replacements)
     if (hasShadowPlugin()) addBuildShadowTask()
 }
