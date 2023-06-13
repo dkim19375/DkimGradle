@@ -274,17 +274,17 @@ fun Project.setupMCSimple(
     group: String,
     version: String = "1.0.0",
     javaVersion: String = "1.8",
-    textEncoding: String = "UTF-8",
     replacements: Map<String, () -> String> = mapOf(
         "name" to name::toString,
         "version" to version::toString
     ),
+    textEncoding: String = "UTF-8",
 ) {
     this.group = group
     this.version = version
     // Tasks
-    setTextEncoding(textEncoding)
     setLanguageVersion(javaVersion)
     addReplacementsTask(replacements)
+    setTextEncoding(textEncoding)
     if (hasShadowPlugin()) addBuildShadowTask()
 }
