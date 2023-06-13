@@ -71,7 +71,10 @@ fun Project.setLanguageVersion(version: String = if (isKotlin()) "1.8.22" else "
         // TODO
         return
     }
-    tasks.named<JavaCompile>("compileJava") { sourceCompatibility = version }
+    tasks.named<JavaCompile>("compileJava") {
+        sourceCompatibility = version
+        targetCompatibility = version
+    }
 }
 
 /**
