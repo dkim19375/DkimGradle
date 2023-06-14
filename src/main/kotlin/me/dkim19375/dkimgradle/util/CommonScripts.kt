@@ -76,8 +76,8 @@ fun Project.setTextEncoding(encoding: String = "UTF-8") {
  *
  * @param javaVersion The java version to set (example: `1.8`)
  */
-fun Project.setLanguageVersion(javaVersion: String = "1.8") {
-    tasks.withType<JavaCompile> {
+fun Project.setJavaVersion(javaVersion: JavaVersion = JavaVersion.VERSION_1_8) {
+    tasks.named<JavaPluginExtension>("java") { // tasks.withType doesn't work
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
     }
@@ -233,7 +233,7 @@ fun Project.setupTasksForMC(
     ),
     group: String = this.group.toString(),
     version: String = this.version.toString(),
-    javaVersion: String = "1.8",
+    javaVersion: JavaVersion = JavaVersion.VERSION_1_8,
     textEncoding: String = "UTF-8",
     jar: () -> File,
 ) {
@@ -273,7 +273,7 @@ fun Project.setupTasksForMC(
 fun Project.setupMCSimple(
     group: String,
     version: String = "1.0.0",
-    javaVersion: String = "1.8",
+    javaVersion: JavaVersion = JavaVersion.VERSION_1_8,
     replacements: Map<String, () -> String> = mapOf(
         "name" to name::toString,
         "version" to version::toString
@@ -283,7 +283,7 @@ fun Project.setupMCSimple(
     this.group = group
     this.version = version
     // Tasks
-    setLanguageVersion(javaVersion)
+    setJavaVersion(javaVersion)
     addReplacementsTask(replacements)
     setTextEncoding(textEncoding)
     if (hasShadowPlugin()) addBuildShadowTask()
