@@ -27,8 +27,10 @@ package me.dkim19375.dkimgradle.util
 import me.dkim19375.dkimgradle.annotation.API
 import me.dkim19375.dkimgradle.delegate.TaskRegisterDelegate
 import org.gradle.api.DefaultTask
+import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.named
@@ -84,6 +86,13 @@ fun Project.setJavaVersion(javaVersion: JavaVersion = JavaVersion.VERSION_1_8) {
 }
 
 /**
+ * Adds the task that generates the Javadoc JAR
+ */
+fun Project.addJavadocJarTask() {
+    tasks.named<JavaPluginExtension>("java") { withJavadocJar() } // tasks.withType doesn't work
+}
+
+/**
  * Configures the ProcessResources [Task] to add replacements
  *
  * @param replacements A [Map] of all the replacements
@@ -96,6 +105,13 @@ fun Project.addReplacementsTask(
         outputs.upToDateWhen { false }
         expand(replacements.mapValues { it.value() })
     }
+}
+
+/**
+ * Adds the specified compiler arguments to the project
+ */
+fun Project.addCompilerArgs(vararg args: String, ) {
+    tasks.withType<JavaCompile> { options.compilerArgs.addAll(args) }
 }
 
 /**
