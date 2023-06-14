@@ -57,14 +57,6 @@ fun Project.isKotlin(): Boolean = setOf(
 fun Project.hasShadowPlugin(): Boolean = plugins.hasPlugin("com.github.johnrengelman.shadow")
 
 /**
- * Adds the task that makes `gradle build` run `gradle shadowJar`
- */
-fun Project.addBuildShadowTask() {
-    check(hasShadowPlugin()) { "Shadow plugin is not applied!" }
-    tasks.named<DefaultTask>("build") { dependsOn("shadowJar") }
-}
-
-/**
  * Sets the text encoding for the project
  *
  * @param encoding The encoding to set
@@ -83,6 +75,14 @@ fun Project.setJavaVersion(javaVersion: JavaVersion = JavaVersion.VERSION_1_8) {
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
     }
+}
+
+/**
+ * Adds the task that makes `gradle build` run `gradle shadowJar`
+ */
+fun Project.addBuildShadowTask() {
+    check(hasShadowPlugin()) { "Shadow plugin is not applied!" }
+    tasks.named<DefaultTask>("build") { dependsOn("shadowJar") }
 }
 
 /**
