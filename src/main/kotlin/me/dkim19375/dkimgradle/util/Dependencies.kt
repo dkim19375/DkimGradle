@@ -33,33 +33,32 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import java.lang.NumberFormatException
 
-fun DependencyHandler.spigotAPI(project: Project, versionString: String): String {
+fun DependencyHandler.spigotAPI(versionString: String, project: Project?): String {
     val version = Version(versionString)
     // Repositories
-    if (version.major <= 1 && version.minor <= 15) { project.repositories.maven(Repository.SONATYPE_SNAPSHOTS_OLD) }
-    project.repositories.maven(Repository.MAVEN_CENTRAL, Repository.SPIGOT)
+    if (version.major <= 1 && version.minor <= 15) { project?.repositories?.maven(Repository.SONATYPE_SNAPSHOTS_OLD) }
+    project?.repositories?.maven(Repository.MAVEN_CENTRAL, Repository.SPIGOT)
     // Dependency
     return "org.spigotmc:spigot-api:${getVersionString(versionString)}"
 }
 
-fun DependencyHandler.spigotNMS(project: Project, versionString: String): String {
+fun DependencyHandler.spigotNMS(versionString: String, project: Project?): String {
     // Repositories
-    project.repositories.maven(Repository.MAVEN_CENTRAL, Repository.SPIGOT)
-    project.repositories.mavenLocal()
+    project?.repositories?.maven(Repository.MAVEN_CENTRAL, Repository.SPIGOT)
+    project?.repositories?.mavenLocal()
     // Dependency
     return "org.spigotmc:spigot:${getVersionString(versionString)}"
 }
 
-fun DependencyHandler.paper(project: Project, version: String): String {
+fun DependencyHandler.paper(version: String, project: Project?): String {
     val paperVersion: PaperVersion = PaperVersion.parse(version)
     // Repositories
-    project.repositories.maven(Repository.MAVEN_CENTRAL, Repository.PAPER)
+    project?.repositories?.maven(Repository.MAVEN_CENTRAL, Repository.SONATYPE_SNAPSHOTS_OLD, Repository.PAPER)
     // Dependency
     return "${paperVersion.groupID}:${paperVersion.artifactID}:${getVersionString(version)}"
 }
 
-fun DependencyHandler.getVersionString(version: String): String =
-    "${version}-R0.1-SNAPSHOT"
+fun DependencyHandler.getVersionString(version: String): String = "${version}-R0.1-SNAPSHOT"
 
 class Version(version: String) {
     val major: Int

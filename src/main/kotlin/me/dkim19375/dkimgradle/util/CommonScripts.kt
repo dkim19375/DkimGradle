@@ -110,7 +110,7 @@ fun Project.addReplacementsTask(
 /**
  * Adds the specified compiler arguments to the project
  */
-fun Project.addCompilerArgs(vararg args: String, ) {
+fun Project.addCompilerArgs(vararg args: String) {
     tasks.withType<JavaCompile> { options.compilerArgs.addAll(args) }
 }
 
@@ -231,7 +231,6 @@ fun Project.deleteAllTask(
  * @param dependsOnTask The task that you want the [deleteAll task][deleteAllTask] to depend on
  * @param jar A function that returns the built jar file
  */
-@Suppress("UNUSED_VARIABLE")
 @API
 fun Project.setupTasksForMC(
     serverFoldersRoot: String,
@@ -260,7 +259,7 @@ fun Project.setupTasksForMC(
         textEncoding = textEncoding,
         replacements = replacements,
     )
-    val removeBuildJars by removeBuildJarsTask()
+    removeBuildJarsTask()
     val serverRoot = serverFoldersRoot.removeSuffix("/").removeSuffix("\\")
     val deleteAll by deleteAllTask(
         deleteFilesInDirectories = serverFolderNames.map { folderName ->
@@ -269,7 +268,7 @@ fun Project.setupTasksForMC(
         fileName = jarFileName,
         dependsOnTask = dependsOnTask,
     )
-    val copyFile by copyFileTask(
+    copyFileTask(
         copyToDirectory = "$serverRoot/$mainServerName/plugins",
         dependsOnTask = deleteAll,
         jar = jar
@@ -300,7 +299,7 @@ fun Project.setupMC(
 ) {
     this.group = group
     this.version = version
-    if (javaVersion != null) setJavaVersion(javaVersion)
+    javaVersion?.let(::setJavaVersion)
     addReplacementsTask(replacements)
     setTextEncoding(textEncoding)
     if (hasShadowPlugin()) addBuildShadowTask()
@@ -337,5 +336,5 @@ fun Project.setupSpigot(
         replacements = replacements,
         textEncoding = textEncoding,
     )
-    dependencies.spigotAPI(this, minecraftVersion)
+    dependencies.spigotAPI(minecraftVersion, this)
 }
