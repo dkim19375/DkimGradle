@@ -24,6 +24,7 @@
 
 package me.dkim19375.dkimgradle.util
 
+import jdk.javadoc.internal.api.JavadocTaskImpl
 import me.dkim19375.dkimgradle.annotation.API
 import me.dkim19375.dkimgradle.delegate.TaskRegisterDelegate
 import org.gradle.api.DefaultTask
@@ -33,6 +34,7 @@ import org.gradle.api.Task
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.withType
 import java.io.File
@@ -86,10 +88,18 @@ fun Project.addBuildShadowTask() {
 }
 
 /**
- * Adds the task that generates the Javadoc JAR
+ * Adds the task that generates the Javadoc and sources jar files
+ *
+ * @param javadocClassifier The classifier for the Javadoc jar file
+ * @param sourcesClassifier The classifier for the sources jar file
  */
-fun Project.addJavadocJarTask() {
-    tasks.named<JavaPluginExtension>("java") { withJavadocJar() } // tasks.withType doesn't work
+fun Project.javaJavadocSourcesJars(javadocClassifier: String? = null, sourcesClassifier: String? = null) {
+    tasks.named<JavaPluginExtension>("java") {  // tasks.withType doesn't work
+        withJavadocJar()
+        withSourcesJar()
+    }
+    if (javadocClassifier != null) { tasks.named<Jar>("javadocJar") { archiveClassifier.set(javadocClassifier) } }
+    if (sourcesClassifier != null) { tasks.named<Jar>("sourcesJar") { archiveClassifier.set(sourcesClassifier) } }
 }
 
 /**
