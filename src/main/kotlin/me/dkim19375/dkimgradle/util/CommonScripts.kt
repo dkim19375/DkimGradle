@@ -92,6 +92,7 @@ fun Project.addBuildShadowTask() {
  * @param javadocClassifier The classifier for the Javadoc jar file
  * @param sourcesClassifier The classifier for the sources jar file
  */
+@API
 fun Project.javaJavadocSourcesJars(javadocClassifier: String? = null, sourcesClassifier: String? = null) {
     tasks.named<JavaPluginExtension>("java") {  // tasks.withType doesn't work
         withJavadocJar()
@@ -119,6 +120,7 @@ fun Project.addReplacementsTask(
 /**
  * Adds the specified compiler arguments to the project
  */
+@API
 fun Project.addCompilerArgs(vararg args: String) {
     tasks.withType<JavaCompile> { options.compilerArgs.addAll(args) }
 }
