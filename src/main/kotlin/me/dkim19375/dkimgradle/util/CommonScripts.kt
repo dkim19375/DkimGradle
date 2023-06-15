@@ -24,7 +24,6 @@
 
 package me.dkim19375.dkimgradle.util
 
-import jdk.javadoc.internal.api.JavadocTaskImpl
 import me.dkim19375.dkimgradle.annotation.API
 import me.dkim19375.dkimgradle.delegate.TaskRegisterDelegate
 import org.gradle.api.DefaultTask
