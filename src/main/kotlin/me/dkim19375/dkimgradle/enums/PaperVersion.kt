@@ -24,6 +24,8 @@
 
 package me.dkim19375.dkimgradle.enums
 
+import me.dkim19375.dkimgradle.util.Version
+
 enum class PaperVersion(val groupID: String, val artifactID: String) {
     BELOW_1_9("org.github.paperspigot", "paperspigot-api"),
     BELOW_1_17("com.destroystokyo.paper", "paper-api"),
@@ -31,31 +33,12 @@ enum class PaperVersion(val groupID: String, val artifactID: String) {
     ;
 
     companion object {
-        fun parse(version: String): PaperVersion {
-            // Split version string
-            val versionSplit = version.split('.')
-            require(versionSplit.size >= 2) { "Failed to parse Paper Minecraft version (invalid version string): $version" }
-
-            // Get major and minor version
-            val (major, minor) = runCatching {
-                versionSplit[0].toInt() to versionSplit[1].toInt()
-            }.getOrElse {
-                throw IllegalArgumentException("Failed to parse Paper Minecraft version (invalid version numbers): $version")
-            }
-            val patch = runCatching {
-                versionSplit.getOrNull(2)?.toInt()
-            }.getOrElse {
-                throw IllegalArgumentException("Failed to parse Paper Minecraft version (invalid version numbers): $version")
-            }
-
-            // Return correct PaperVersion
-            require(major >= 1) { "Invalid Paper Minecraft version (invalid major version): $version" }
-            require(minor >= 7) { "Invalid Paper Minecraft version (invalid minor version): $version" }
-            require(patch == null || patch >= 0) { "Invalid Paper Minecraft version (invalid patch version): $version" }
+        fun parse(versionString: String): PaperVersion {
+            val version = Version(versionString)
             return when {
-                major != 1 -> REST
-                minor < 9 -> BELOW_1_9
-                minor < 17 -> BELOW_1_17
+                version.major != 1 -> REST
+                version.minor < 9 -> BELOW_1_9
+                version.minor < 17 -> BELOW_1_17
                 else -> REST
             }
         }

@@ -253,7 +253,7 @@ fun Project.setupTasksForMC(
     textEncoding: String = "UTF-8",
     jar: () -> File,
 ) {
-    setupMCSimple(
+    setupMC(
         group = group,
         version = version,
         javaVersion = javaVersion,
@@ -283,13 +283,15 @@ fun Project.setupTasksForMC(
  *
  * @param group The group of the project (example: `me.dkim19375`)
  * @param version The version of the project (example: `1.0.0`)
- * @param javaVersion The java version of the project (example: `1.8`)
+ * @param javaVersion The java version of the project (example: [JavaVersion.VERSION_1_8])
+ * @param replacements The replacements for the [replacements task][addReplacementsTask]
+ * @param textEncoding The text encoding for the [text encoding task][setTextEncoding]
  */
 @API
-fun Project.setupMCSimple(
+fun Project.setupMC(
     group: String,
     version: String = "1.0.0",
-    javaVersion: JavaVersion = JavaVersion.VERSION_1_8,
+    javaVersion: JavaVersion? = null,
     replacements: Map<String, () -> String> = mapOf(
         "name" to name::toString,
         "version" to version::toString
@@ -298,9 +300,42 @@ fun Project.setupMCSimple(
 ) {
     this.group = group
     this.version = version
-    // Tasks
-    setJavaVersion(javaVersion)
+    if (javaVersion != null) setJavaVersion(javaVersion)
     addReplacementsTask(replacements)
     setTextEncoding(textEncoding)
     if (hasShadowPlugin()) addBuildShadowTask()
+}
+
+/**
+ * Sets up the project with the specified [group] and [version] for a simple Spigot project
+ *
+ * Adds the Spigot-API dependency/repositories, text encoding task, replacements task, and build shadow task (if the Shadow plugin is applied)
+ *
+ * @param group The group of the project (example: `me.dkim19375`)
+ * @param version The version of the project (example: `1.0.0`)
+ * @param minecraftVersion The Minecraft version of the project (example: `1.8.8`)
+ * @param javaVersion The java version of the project (example: [JavaVersion.VERSION_1_8])
+ * @param replacements The replacements for the [addReplacementsTask] task
+ * @param textEncoding The text encoding for the [setTextEncoding] task
+ */
+@API
+fun Project.setupSpigot(
+    group: String,
+    version: String = "1.0.0",
+    minecraftVersion: String,
+    javaVersion: JavaVersion? = null,
+    replacements: Map<String, () -> String> = mapOf(
+        "name" to name::toString,
+        "version" to version::toString
+    ),
+    textEncoding: String = "UTF-8",
+) {
+    setupMC(
+        group = group,
+        version = version,
+        javaVersion = javaVersion,
+        replacements = replacements,
+        textEncoding = textEncoding,
+    )
+    dependencies.spigotAPI(this, minecraftVersion)
 }
