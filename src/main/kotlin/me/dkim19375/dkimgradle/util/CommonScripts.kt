@@ -314,37 +314,3 @@ fun Project.setupMC(
     setTextEncoding(textEncoding)
     if (hasShadowPlugin()) addBuildShadowTask()
 }
-
-/**
- * Sets up the project with the specified [group] and [version] for a simple Spigot project
- *
- * Adds the Spigot-API dependency/repositories, text encoding task, replacements task, and build shadow task (if the Shadow plugin is applied)
- *
- * @param group The group of the project (example: `me.dkim19375`)
- * @param version The version of the project (example: `1.0.0`)
- * @param minecraftVersion The Minecraft version of the project (example: `1.8.8`)
- * @param javaVersion The java version of the project (example: [JavaVersion.VERSION_1_8])
- * @param replacements The replacements for the [addReplacementsTask] task
- * @param textEncoding The text encoding for the [setTextEncoding] task
- */
-@API
-fun Project.setupSpigot(
-    group: String,
-    version: String = "1.0.0",
-    minecraftVersion: String,
-    javaVersion: JavaVersion? = null,
-    replacements: Map<String, () -> String> = mapOf(
-        "name" to name::toString,
-        "version" to version::toString
-    ),
-    textEncoding: String = "UTF-8",
-) {
-    setupMC(
-        group = group,
-        version = version,
-        javaVersion = javaVersion,
-        replacements = replacements,
-        textEncoding = textEncoding,
-    )
-    dependencies.spigotAPI(minecraftVersion, this)
-}
