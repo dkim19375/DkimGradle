@@ -36,6 +36,7 @@ enum class Repository(internal val url: String) {
     SPIGOT("https://hub.spigotmc.org/nexus/content/repositories/snapshots/"),
     PAPER("https://repo.papermc.io/repository/maven-public/"),
     JITPACK("https://jitpack.io/"),
+    CLOJARS("https://repo.clojars.org/"),
     TRIUMPH_RELEASES("https://repo.triumphteam.dev/releases/"),
     TRIUMPH_SNAPSHOTS("https://repo.triumphteam.dev/snapshots/"),
     VIA_VERSION("https://repo.viaversion.com/everything/"),

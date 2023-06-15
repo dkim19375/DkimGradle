@@ -27,10 +27,13 @@ package me.dkim19375.dkimgradle.util
 import me.dkim19375.dkimgradle.annotation.API
 import me.dkim19375.dkimgradle.delegate.TaskRegisterDelegate
 import org.gradle.api.DefaultTask
+import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.withType
 import java.io.File
@@ -55,14 +58,6 @@ fun Project.isKotlin(): Boolean = setOf(
 fun Project.hasShadowPlugin(): Boolean = plugins.hasPlugin("com.github.johnrengelman.shadow")
 
 /**
- * Adds the task that makes `gradle build` run `gradle shadowJar`
- */
-fun Project.addBuildShadowTask() {
-    check(hasShadowPlugin()) { "Shadow plugin is not applied!" }
-    tasks.named<DefaultTask>("build") { dependsOn("shadowJar") }
-}
-
-/**
  * Sets the text encoding for the project
  *
  * @param encoding The encoding to set
@@ -76,11 +71,35 @@ fun Project.setTextEncoding(encoding: String = "UTF-8") {
  *
  * @param javaVersion The java version to set (example: `1.8`)
  */
-fun Project.setLanguageVersion(javaVersion: String = "1.8") {
-    tasks.withType<JavaCompile> {
+fun Project.setJavaVersion(javaVersion: JavaVersion = JavaVersion.VERSION_1_8) {
+    tasks.named<JavaPluginExtension>("java") { // tasks.withType doesn't work
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
     }
+}
+
+/**
+ * Adds the task that makes `gradle build` run `gradle shadowJar`
+ */
+fun Project.addBuildShadowTask() {
+    check(hasShadowPlugin()) { "Shadow plugin is not applied!" }
+    tasks.named<DefaultTask>("build") { dependsOn("shadowJar") }
+}
+
+/**
+ * Adds the task that generates the Javadoc and sources jar files
+ *
+ * @param javadocClassifier The classifier for the Javadoc jar file
+ * @param sourcesClassifier The classifier for the sources jar file
+ */
+@API
+fun Project.javaJavadocSourcesJars(javadocClassifier: String? = null, sourcesClassifier: String? = null) {
+    tasks.named<JavaPluginExtension>("java") {  // tasks.withType doesn't work
+        withJavadocJar()
+        withSourcesJar()
+    }
+    if (javadocClassifier != null) { tasks.named<Jar>("javadocJar") { archiveClassifier.set(javadocClassifier) } }
+    if (sourcesClassifier != null) { tasks.named<Jar>("sourcesJar") { archiveClassifier.set(sourcesClassifier) } }
 }
 
 /**
@@ -96,6 +115,14 @@ fun Project.addReplacementsTask(
         outputs.upToDateWhen { false }
         expand(replacements.mapValues { it.value() })
     }
+}
+
+/**
+ * Adds the specified compiler arguments to the project
+ */
+@API
+fun Project.addCompilerArgs(vararg args: String) {
+    tasks.withType<JavaCompile> { options.compilerArgs.addAll(args) }
 }
 
 /**
@@ -215,7 +242,6 @@ fun Project.deleteAllTask(
  * @param dependsOnTask The task that you want the [deleteAll task][deleteAllTask] to depend on
  * @param jar A function that returns the built jar file
  */
-@Suppress("UNUSED_VARIABLE")
 @API
 fun Project.setupTasksForMC(
     serverFoldersRoot: String,
@@ -233,18 +259,18 @@ fun Project.setupTasksForMC(
     ),
     group: String = this.group.toString(),
     version: String = this.version.toString(),
-    javaVersion: String = "1.8",
+    javaVersion: JavaVersion = JavaVersion.VERSION_1_8,
     textEncoding: String = "UTF-8",
     jar: () -> File,
 ) {
-    setupMCSimple(
+    setupMC(
         group = group,
         version = version,
         javaVersion = javaVersion,
         textEncoding = textEncoding,
         replacements = replacements,
     )
-    val removeBuildJars by removeBuildJarsTask()
+    removeBuildJarsTask()
     val serverRoot = serverFoldersRoot.removeSuffix("/").removeSuffix("\\")
     val deleteAll by deleteAllTask(
         deleteFilesInDirectories = serverFolderNames.map { folderName ->
@@ -253,7 +279,7 @@ fun Project.setupTasksForMC(
         fileName = jarFileName,
         dependsOnTask = dependsOnTask,
     )
-    val copyFile by copyFileTask(
+    copyFileTask(
         copyToDirectory = "$serverRoot/$mainServerName/plugins",
         dependsOnTask = deleteAll,
         jar = jar
@@ -267,13 +293,15 @@ fun Project.setupTasksForMC(
  *
  * @param group The group of the project (example: `me.dkim19375`)
  * @param version The version of the project (example: `1.0.0`)
- * @param javaVersion The java version of the project (example: `1.8`)
+ * @param javaVersion The java version of the project (example: [JavaVersion.VERSION_1_8])
+ * @param replacements The replacements for the [replacements task][addReplacementsTask]
+ * @param textEncoding The text encoding for the [text encoding task][setTextEncoding]
  */
 @API
-fun Project.setupMCSimple(
+fun Project.setupMC(
     group: String,
     version: String = "1.0.0",
-    javaVersion: String = "1.8",
+    javaVersion: JavaVersion? = null,
     replacements: Map<String, () -> String> = mapOf(
         "name" to name::toString,
         "version" to version::toString
@@ -282,8 +310,7 @@ fun Project.setupMCSimple(
 ) {
     this.group = group
     this.version = version
-    // Tasks
-    setLanguageVersion(javaVersion)
+    javaVersion?.let(::setJavaVersion)
     addReplacementsTask(replacements)
     setTextEncoding(textEncoding)
     if (hasShadowPlugin()) addBuildShadowTask()
