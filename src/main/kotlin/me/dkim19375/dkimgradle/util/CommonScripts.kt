@@ -62,7 +62,7 @@ fun Project.hasShadowPlugin(): Boolean = plugins.hasPlugin("com.github.johnrenge
  *
  * @param encoding The encoding to set
  */
-fun Project.setTextEncoding(encoding: String = "UTF-8") {
+fun Project.setJavaTextEncoding(encoding: String = "UTF-8") {
     tasks.withType<JavaCompile> { options.encoding = encoding }
 }
 
@@ -295,7 +295,7 @@ fun Project.setupTasksForMC(
  * @param version The version of the project (example: `1.0.0`)
  * @param javaVersion The java version of the project (example: [JavaVersion.VERSION_1_8])
  * @param replacements The replacements for the [replacements task][addReplacementsTask]
- * @param textEncoding The text encoding for the [text encoding task][setTextEncoding]
+ * @param textEncoding The text encoding for the [text encoding task][setJavaTextEncoding]
  */
 @API
 fun Project.setupMC(
@@ -312,6 +312,6 @@ fun Project.setupMC(
     this.version = version
     javaVersion?.let(::setJavaVersion)
     addReplacementsTask(replacements)
-    setTextEncoding(textEncoding)
+    setJavaTextEncoding(textEncoding)
     if (hasShadowPlugin()) addBuildShadowTask()
 }
