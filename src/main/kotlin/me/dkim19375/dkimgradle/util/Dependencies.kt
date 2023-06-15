@@ -31,10 +31,9 @@ import me.dkim19375.dkimgradle.enums.Repository
 import me.dkim19375.dkimgradle.enums.maven
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.DependencyHandler
-import java.lang.NumberFormatException
 
 fun DependencyHandler.spigotAPI(versionString: String, project: Project? = null): String {
-    val version = Version(versionString)
+    val version = MinecraftVersion(versionString)
     // Repositories
     if (version.major <= 1 && version.minor <= 15) { project?.repositories?.maven(Repository.SONATYPE_SNAPSHOTS_OLD) }
     project?.repositories?.maven(Repository.MAVEN_CENTRAL, Repository.SPIGOT)
@@ -59,23 +58,3 @@ fun DependencyHandler.paper(version: String, project: Project? = null): String {
 }
 
 fun DependencyHandler.getVersionString(version: String): String = "${version}-R0.1-SNAPSHOT"
-
-class Version(version: String) {
-    val major: Int
-    val minor: Int
-    val patch: Int
-
-    init {
-        val versionSplit = version.split('.')
-        require(versionSplit.size >= 2) { "Failed to parse Minecraft version (invalid version string): $version" }
-
-        // Get patch
-        try {
-            major = versionSplit[0].toInt()
-            minor = versionSplit[1].toInt()
-            patch = versionSplit.getOrElse(2) { "0" }.toInt()
-        } catch (e: NumberFormatException) {
-            throw IllegalArgumentException("Failed to parse Minecraft version (invalid values): $version")
-        }
-    }
-}

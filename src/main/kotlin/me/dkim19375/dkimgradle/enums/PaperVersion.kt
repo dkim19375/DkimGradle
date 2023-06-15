@@ -24,7 +24,7 @@
 
 package me.dkim19375.dkimgradle.enums
 
-import me.dkim19375.dkimgradle.util.Version
+import me.dkim19375.dkimgradle.util.MinecraftVersion
 
 enum class PaperVersion(val groupID: String, val artifactID: String) {
     BELOW_1_9("org.github.paperspigot", "paperspigot-api"),
@@ -34,7 +34,7 @@ enum class PaperVersion(val groupID: String, val artifactID: String) {
 
     companion object {
         fun parse(versionString: String): PaperVersion {
-            val version = Version(versionString)
+            val version = MinecraftVersion(versionString)
             return when {
                 version.major != 1 -> REST
                 version.minor < 9 -> BELOW_1_9
