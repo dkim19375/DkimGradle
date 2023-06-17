@@ -32,12 +32,12 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.tasks.Jar
-import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.named
-import org.gradle.kotlin.dsl.withType
+import org.gradle.kotlin.dsl.*
 import java.io.File
 
 /**
@@ -167,6 +167,33 @@ fun Project.removeBuildJarsTask(directory: String = "build/libs"): TaskRegisterD
 fun Project.relocate(from: String, to: String) {
     check(hasShadowPlugin()) { "Shadow plugin is not applied!" }
     tasks.named<ShadowJar>("shadowJar") { relocate(from, to) }
+}
+
+/**
+ * Applies the `maven-publish` plugin and configures the [MavenPublication]
+ *
+ * @param groupId The group ID to publish to
+ * @param artifactId The artifact ID to publish to
+ * @param configuration The configuration to apply to the [MavenPublication]
+ *
+ * @return The [MavenPublication] that was created
+ */
+inline fun Project.publish(groupId: String? = project.group.toString(), artifactId: String? = project.name, crossinline configuration: MavenPublication.() -> Unit): MavenPublication {
+    apply(plugin = "maven-publish")
+    val publication: MavenPublication = (extensions["publications"] as PublishingExtension).publications.create<MavenPublication>("maven")
+
+    // Kotlin
+    if (isKotlin()) {
+        //TODO
+    }
+
+    // Java
+    groupId?.let { publication.groupId = it }
+    artifactId?.let { publication.artifactId = it }
+    publication.version = project.version as String
+    publication.from(components["java"])
+    publication.configuration()
+    return publication
 }
 
 /**
@@ -340,6 +367,7 @@ fun Project.setupMC(
     textEncoding: String? = "UTF-8",
     artifactClassifier: String? = "",
 ) {
+    apply(plugin = "java")
     this.group = group
     this.version = version
     javaVersion?.let(::setJavaVersion)
