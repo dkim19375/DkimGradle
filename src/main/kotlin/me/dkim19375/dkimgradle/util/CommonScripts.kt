@@ -24,6 +24,7 @@
 
 package me.dkim19375.dkimgradle.util
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import me.dkim19375.dkimgradle.annotation.API
 import me.dkim19375.dkimgradle.delegate.TaskRegisterDelegate
 import org.gradle.api.DefaultTask
@@ -34,6 +35,7 @@ import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.tasks.Jar
+import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.withType
 import java.io.File
@@ -58,6 +60,14 @@ fun Project.isKotlin(): Boolean = setOf(
 fun Project.hasShadowPlugin(): Boolean = plugins.hasPlugin("com.github.johnrengelman.shadow")
 
 /**
+ * Gets the Java plugin extension
+ */
+fun Project.getJavaExtension(): JavaPluginExtension {
+    check(plugins.hasPlugin("java")) { "Java plugin is not applied!" }
+    return extensions["java"] as JavaPluginExtension
+}
+
+/**
  * Sets the text encoding for the project
  *
  * @param encoding The encoding to set
@@ -72,10 +82,19 @@ fun Project.setJavaTextEncoding(encoding: String = "UTF-8") {
  * @param javaVersion The java version to set (example: `1.8`)
  */
 fun Project.setJavaVersion(javaVersion: JavaVersion = JavaVersion.VERSION_1_8) {
-    tasks.named<JavaPluginExtension>("java") { // tasks.withType doesn't work
-        sourceCompatibility = javaVersion
-        targetCompatibility = javaVersion
-    }
+    val java: JavaPluginExtension = getJavaExtension()
+    java.sourceCompatibility = javaVersion
+    java.targetCompatibility = javaVersion
+}
+
+/**
+ * Sets the artifact/archive classifier for the JAR and Shadow JAR tasks
+ *
+ * @param classifier The classifier to set
+ */
+fun Project.setShadowArchiveClassifier(classifier: String = "") {
+    check(hasShadowPlugin()) { "Shadow plugin is not applied!" }
+    tasks.named<ShadowJar>("shadowJar") { archiveClassifier.set(classifier) }
 }
 
 /**
@@ -93,11 +112,10 @@ fun Project.addBuildShadowTask() {
  * @param sourcesClassifier The classifier for the sources jar file
  */
 @API
-fun Project.javaJavadocSourcesJars(javadocClassifier: String? = null, sourcesClassifier: String? = null) {
-    tasks.named<JavaPluginExtension>("java") {  // tasks.withType doesn't work
-        withJavadocJar()
-        withSourcesJar()
-    }
+fun Project.addJavaJavadocSourcesJars(javadocClassifier: String? = null, sourcesClassifier: String? = null) {
+    val java: JavaPluginExtension = getJavaExtension()
+    java.withJavadocJar()
+    java.withSourcesJar()
     if (javadocClassifier != null) { tasks.named<Jar>("javadocJar") { archiveClassifier.set(javadocClassifier) } }
     if (sourcesClassifier != null) { tasks.named<Jar>("sourcesJar") { archiveClassifier.set(sourcesClassifier) } }
 }
@@ -138,6 +156,17 @@ fun Project.removeBuildJarsTask(directory: String = "build/libs"): TaskRegisterD
     doLast {
         File(project.rootDir, directory).deleteRecursively()
     }
+}
+
+/**
+ * Relocates the specified package to the specified package
+ *
+ * @param from The package to relocate
+ * @param to The package to relocate to
+ */
+fun Project.relocate(from: String, to: String) {
+    check(hasShadowPlugin()) { "Shadow plugin is not applied!" }
+    tasks.named<ShadowJar>("shadowJar") { relocate(from, to) }
 }
 
 /**
@@ -260,15 +289,17 @@ fun Project.setupTasksForMC(
     group: String = this.group.toString(),
     version: String = this.version.toString(),
     javaVersion: JavaVersion = JavaVersion.VERSION_1_8,
+    artifactClassifier: String = "",
     textEncoding: String = "UTF-8",
     jar: () -> File,
 ) {
     setupMC(
+        replacements = replacements,
         group = group,
         version = version,
         javaVersion = javaVersion,
+        artifactClassifier = artifactClassifier,
         textEncoding = textEncoding,
-        replacements = replacements,
     )
     removeBuildJarsTask()
     val serverRoot = serverFoldersRoot.removeSuffix("/").removeSuffix("\\")
@@ -302,16 +333,20 @@ fun Project.setupMC(
     group: String,
     version: String = "1.0.0",
     javaVersion: JavaVersion? = null,
-    replacements: Map<String, () -> String> = mapOf(
+    replacements: Map<String, () -> String>? = mapOf(
         "name" to name::toString,
         "version" to version::toString
     ),
-    textEncoding: String = "UTF-8",
+    textEncoding: String? = "UTF-8",
+    artifactClassifier: String? = "",
 ) {
     this.group = group
     this.version = version
     javaVersion?.let(::setJavaVersion)
-    addReplacementsTask(replacements)
-    setJavaTextEncoding(textEncoding)
-    if (hasShadowPlugin()) addBuildShadowTask()
+    replacements?.let(::addReplacementsTask)
+    textEncoding?.let(::setJavaTextEncoding)
+    if (hasShadowPlugin()) {
+        artifactClassifier?.let(::setShadowArchiveClassifier)
+        addBuildShadowTask()
+    }
 }
