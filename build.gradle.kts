@@ -35,7 +35,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
     // Plugins
-    compileOnly("com.github.jengelman.gradle.plugins", "shadow", "1.0.0")
+    compileOnly("com.github.jengelman.gradle.plugins", "shadow", "1.2.4")
 }
 
 license {
