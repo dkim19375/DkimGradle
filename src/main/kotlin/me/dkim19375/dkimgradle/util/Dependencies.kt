@@ -32,6 +32,11 @@ import me.dkim19375.dkimgradle.enums.maven
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.DependencyHandler
 
+/**
+ * 1. Adds the [Repository.SONATYPE_SNAPSHOTS_OLD] repository if the version is 1.15 or below
+ * 2. Adds the [Repository.MAVEN_CENTRAL] and [Repository.SPIGOT] repositories
+ * 3. Adds the dependency (org.spigotmc:spigot-api:[getVersionString])
+ */
 fun DependencyHandler.spigotAPI(versionString: String, project: Project? = null): String {
     val version = MinecraftVersion(versionString)
     // Repositories
@@ -41,6 +46,10 @@ fun DependencyHandler.spigotAPI(versionString: String, project: Project? = null)
     return "org.spigotmc:spigot-api:${getVersionString(versionString)}"
 }
 
+/**
+ * 1. Adds the [Repository.MAVEN_CENTRAL], maven local, and [Repository.SPIGOT] repositories
+ * 2. Adds the dependency (org.spigotmc:spigot:[getVersionString])
+ */
 fun DependencyHandler.spigotNMS(versionString: String, project: Project? = null): String {
     // Repositories
     project?.repositories?.maven(Repository.MAVEN_CENTRAL, Repository.SPIGOT)
@@ -49,6 +58,10 @@ fun DependencyHandler.spigotNMS(versionString: String, project: Project? = null)
     return "org.spigotmc:spigot:${getVersionString(versionString)}"
 }
 
+/**
+ * 1. Adds the [Repository.MAVEN_CENTRAL], [Repository.SONATYPE_SNAPSHOTS_OLD], and [Repository.PAPER] repositories
+ * 2. Adds the dependency ([PaperVersion.groupID]:[PaperVersion.artifactID]:[version]-R0.1-SNAPSHOT)
+ */
 fun DependencyHandler.paper(version: String, project: Project? = null): String {
     val paperVersion: PaperVersion = PaperVersion.parse(version)
     // Repositories
@@ -57,4 +70,7 @@ fun DependencyHandler.paper(version: String, project: Project? = null): String {
     return "${paperVersion.groupID}:${paperVersion.artifactID}:${getVersionString(version)}"
 }
 
+/**
+ * Returns the version string with `-R0.1-SNAPSHOT` appended to it
+ */
 fun DependencyHandler.getVersionString(version: String): String = "${version}-R0.1-SNAPSHOT"
