@@ -134,6 +134,9 @@ enum class Repository(internal val url: String) {
     KRYPTON_SNAPSHOTS("https://repo.kryptonmc.org/snapshots/"),
 
     // keep at bottom
+    /**
+     * [https://repo.essentialsx.net/releases/](https://repo.essentialsx.net/releases/)
+     */
     ESSENTIALS_RELEASES("https://repo.essentialsx.net/releases/"),
     /**
      * [https://repo.essentialsx.net/snapshots/](https://repo.essentialsx.net/snapshots/)
