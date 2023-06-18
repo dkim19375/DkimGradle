@@ -205,6 +205,8 @@ fun Project.relocate(from: String, to: String) {
  * @param publicationName The name of the publishing publication to create
  * @param component The software component that should be published - **Required for Maven Central**
  * @param verifyMavenCentral If these parameters should be checked to see if **most** of the requirements for Maven Central are met
+ * @param setupSigning If the signing plugin should be configured - **Required for Maven Central**
+ * @param setupNexusPublishing If the Nexus publishing plugin should be configured - **Required for Maven Central**
  * @param configuration Extra configuration to apply to the [MavenPublication]
  *
  * @return The [MavenPublication] that was created
