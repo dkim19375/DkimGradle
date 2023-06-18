@@ -228,7 +228,7 @@ inline fun Project.setupPublishing(
     verifyMavenCentral: Boolean = false,
     setupSigning: Boolean = plugins.hasPlugin("signing"),
     setupNexusPublishing: Boolean = plugins.hasPlugin("io.github.gradle-nexus.publish-plugin"),
-    crossinline configuration: MavenPublication.() -> Unit,
+    crossinline configuration: MavenPublication.() -> Unit = {},
 ): MavenPublication = (extensions["publications"] as PublishingExtension).publications.create<MavenPublication>(
     name = publicationName,
 ).apply {
