@@ -242,7 +242,11 @@ fun Project.removeBuildJarsTask(directory: String = "build/libs"): TaskRegisterD
 @API
 fun Project.relocate(
     from: String,
-    to: String = "${project.group}.${project.name}.libs.$from",
+    to: String = "${
+        "${project.group}.${project.name}".lowercase().filter { char ->
+            char.isLetterOrDigit() || char in "._"
+        }
+    }.libs.$from",
 ) {
     check(hasShadowPlugin()) { "Shadow plugin is not applied!" }
     tasks.named<ShadowJar>("shadowJar") { relocate(from, to) }
