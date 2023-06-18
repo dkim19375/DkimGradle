@@ -27,10 +27,12 @@ package me.dkim19375.dkimgradle.util
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.github.gradlenexus.publishplugin.NexusPublishExtension
 import me.dkim19375.dkimgradle.annotation.API
+import me.dkim19375.dkimgradle.data.DocSourcesJarTasksHolder
 import me.dkim19375.dkimgradle.data.pom.DeveloperData
 import me.dkim19375.dkimgradle.data.pom.LicenseData
 import me.dkim19375.dkimgradle.data.pom.SCMData
 import me.dkim19375.dkimgradle.delegate.TaskRegisterDelegate
+import me.dkim19375.dkimgradle.enums.DokkaOutputFormat
 import org.gradle.api.DefaultTask
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
@@ -41,6 +43,8 @@ import org.gradle.api.publish.Publication
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.apply
@@ -49,6 +53,10 @@ import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.withType
 import org.gradle.plugins.signing.SigningExtension
+import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
 import java.net.URI
 
@@ -57,6 +65,7 @@ import java.net.URI
  */
 @API
 fun Project.isKotlin(): Boolean = setOf(
+    "kotlin-gradle-plugin",
     "org.jetbrains.kotlin.js",
     "org.jetbrains.kotlin.jvm",
     "org.jetbrains.kotlin.native",
@@ -64,7 +73,7 @@ fun Project.isKotlin(): Boolean = setOf(
     "org.jetbrains.kotlin.multiplatform",
 ).any {
     plugins.hasPlugin(it)
-}
+} || plugins.any { it is KotlinBasePlugin }
 
 /**
  * Checks if the Shadow plugin is applied
@@ -89,14 +98,23 @@ fun Project.setJavaTextEncoding(encoding: String = "UTF-8") {
 }
 
 /**
- * Sets the Java (and possibly Kotlin in the future) version for the project
+ * Sets the Java version for the project
  *
- * @param javaVersion The java version to set (example: `1.8`)
+ * @param javaVersion The java version to set (example: [JavaVersion.VERSION_1_8])
  */
 fun Project.setJavaVersion(javaVersion: JavaVersion = JavaVersion.VERSION_1_8) {
+    val versionNum = javaVersion.name.removePrefix("VERSION_").removePrefix("1_").toInt()
     val java: JavaPluginExtension = getJavaExtension()
     java.sourceCompatibility = javaVersion
     java.targetCompatibility = javaVersion
+    if (!isKotlin()) {
+        return
+    }
+    val kotlin = extensions["kotlin"] as KotlinProjectExtension
+    kotlin.jvmToolchain(versionNum)
+    tasks.withType<KotlinCompile> {
+        kotlinOptions.jvmTarget = versionNum.toString()
+    }
 }
 
 /**
@@ -124,7 +142,10 @@ fun Project.addBuildShadowTask() {
  * @param sourcesClassifier The classifier for the sources jar file
  */
 @API
-fun Project.addJavaJavadocSourcesJars(javadocClassifier: String? = null, sourcesClassifier: String? = null) {
+fun Project.addJavaJavadocSourcesJars(
+    javadocClassifier: String? = null,
+    sourcesClassifier: String? = null,
+): DocSourcesJarTasksHolder {
     val java: JavaPluginExtension = getJavaExtension()
     java.withJavadocJar()
     java.withSourcesJar()
@@ -134,6 +155,51 @@ fun Project.addJavaJavadocSourcesJars(javadocClassifier: String? = null, sources
     if (sourcesClassifier != null) {
         tasks.named<Jar>("sourcesJar") { archiveClassifier.set(sourcesClassifier) }
     }
+    return DocSourcesJarTasksHolder(
+        javadocJarTask = tasks.named("javadocJar").get() as Jar,
+        sourcesJarTask = tasks.named("sourcesJar").get() as Jar
+    )
+}
+
+@API
+fun Project.addKotlinKDocSourcesJars(
+    javadocClassifier: String = "javadoc",
+    sourcesClassifier: String = "sources",
+    dokkaType: DokkaOutputFormat = tasks.findByName(DokkaOutputFormat.HTML_MULTI_MODULE.taskName)?.let {
+        DokkaOutputFormat.HTML_MULTI_MODULE
+    } ?: DokkaOutputFormat.HTML,
+): DocSourcesJarTasksHolder {
+    check(plugins.hasPlugin("org.jetbrains.dokka")) { "Dokka plugin is not applied!" }
+
+    val sourceSets = extensions["sourceSets"] as SourceSetContainer
+    val mainSourceSet = sourceSets.named<SourceSet>("main")
+
+    val dokkaTask = tasks.findByName(dokkaType.taskName) as? DokkaTask
+    if (dokkaTask == null) {
+        if (dokkaType.isMultiModule) {
+            throw IllegalArgumentException(
+                "Dokka task '${dokkaType.taskName}' not found! " +
+                        "This dokka output format is for multi-module projects only."
+            )
+        }
+        throw IllegalArgumentException("Dokka task '${dokkaType.taskName}' not found!")
+    }
+
+    val dokkaJar = tasks.create("${dokkaType.taskName}Jar", Jar::class) {
+        dependsOn(dokkaTask)
+        from(dokkaTask)
+        archiveClassifier.set(javadocClassifier)
+    }
+
+    val sourcesJar = tasks.create("sourcesJar", Jar::class) {
+        from(mainSourceSet.get().allSource.srcDirs)
+        archiveClassifier.set(sourcesClassifier)
+    }
+
+    return DocSourcesJarTasksHolder(
+        javadocJarTask = dokkaJar,
+        sourcesJarTask = sourcesJar,
+    )
 }
 
 /**
@@ -517,7 +583,7 @@ fun Project.setupTasksForMC(
 fun Project.setupMC(
     group: String,
     version: String = "1.0.0",
-    javaVersion: JavaVersion? = null,
+    javaVersion: JavaVersion? = JavaVersion.VERSION_1_8,
     replacements: Map<String, () -> String>? = mapOf(
         "name" to name::toString, "version" to version::toString
     ),
