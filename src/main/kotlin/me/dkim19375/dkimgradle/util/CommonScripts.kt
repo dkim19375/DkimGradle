@@ -172,9 +172,6 @@ fun Project.addKotlinKDocSourcesJars(
 ): DocSourcesJarTasksHolder {
     check(plugins.hasPlugin("org.jetbrains.dokka")) { "Dokka plugin is not applied!" }
 
-    val sourceSets = extensions["sourceSets"] as SourceSetContainer
-    val mainSourceSet = sourceSets.named<SourceSet>("main")
-
     val dokkaTask = tasks.findByName(dokkaType.taskName) as? DokkaTask
     if (dokkaTask == null) {
         if (dokkaType.isMultiModule) {
@@ -186,20 +183,18 @@ fun Project.addKotlinKDocSourcesJars(
         throw IllegalArgumentException("Dokka task '${dokkaType.taskName}' not found!")
     }
 
-    val dokkaJar = tasks.create("${dokkaType.taskName}Jar", Jar::class) {
-        dependsOn(dokkaTask)
-        from(dokkaTask)
-        archiveClassifier.set(javadocClassifier)
-    }
-
-    val sourcesJar = tasks.create("sourcesJar", Jar::class) {
-        from(mainSourceSet.get().allSource.srcDirs)
-        archiveClassifier.set(sourcesClassifier)
-    }
+    val sourceSets = extensions["sourceSets"] as SourceSetContainer
 
     return DocSourcesJarTasksHolder(
-        javadocJarTask = dokkaJar,
-        sourcesJarTask = sourcesJar,
+        javadocJarTask = tasks.create("${dokkaType.taskName}Jar", Jar::class) {
+            dependsOn(dokkaTask)
+            from(dokkaTask)
+            archiveClassifier.set(javadocClassifier)
+        },
+        sourcesJarTask = tasks.create("sourcesJar", Jar::class) {
+            from(sourceSets.named<SourceSet>("main").get().allSource.srcDirs)
+            archiveClassifier.set(sourcesClassifier)
+        },
     )
 }
 
@@ -208,11 +203,7 @@ fun Project.addKotlinKDocSourcesJars(
  *
  * @param replacements A [Map] of all the replacements
  */
-fun Project.addReplacementsTask(
-    replacements: Map<String, () -> String> = mapOf(
-        "version" to version::toString
-    ),
-) {
+fun Project.addReplacementsTask(replacements: Map<String, () -> String> = mapOf("version" to version::toString)) {
     tasks.named<Copy>("processResources") {
         outputs.upToDateWhen { false }
         expand(replacements.mapValues { it.value() })
@@ -249,58 +240,63 @@ fun Project.removeBuildJarsTask(directory: String = "build/libs"): TaskRegisterD
  * @param to The package to relocate to
  */
 @API
-fun Project.relocate(from: String, to: String) {
+fun Project.relocate(
+    from: String,
+    to: String = "${project.group}.${project.name}.libs.$from",
+) {
     check(hasShadowPlugin()) { "Shadow plugin is not applied!" }
     tasks.named<ShadowJar>("shadowJar") { relocate(from, to) }
 }
 
 /**
- * Applies the `maven-publish` plugin and configures the [MavenPublication]
+ * Sets up a publishing configuration for the project
+ *
+ * 1. Creates a [MavenPublication] with the specified parameters
+ * 2. Calls [setupSigning(...)][me.dkim19375.dkimgradle.util.setupSigning] with the specified parameters if [setupSigning] is true
+ * 3. Calls [setupNexusPublishing(...)][me.dkim19375.dkimgradle.util.setupNexusPublishing] with the specified parameters if [setupNexusPublishing] is true
  *
  * @param groupId The group ID to publish to (ex: `io.github.username`) - **Required for Maven Central**
  * @param artifactId The artifact ID to publish to (ex: `cool-library`) - **Required for Maven Central**
- * @param artifacts The artifacts to include (see [MavenPublication.artifact] for more information)
- * *May need to add sources and javadocs jar which are required for Maven Central*
- *
- * @param snapshot If this artifact is a snapshot version
+ * @param artifacts The artifacts to include (see [MavenPublication.artifact] for more information) *May need to add sources and javadocs jar which are required for Maven Central*
  * @param name The name of the project - **Required for Maven Central**
  * @param description The description of the project - **Required for Maven Central**
  * @param url The URL of the project - **Required for Maven Central**
  * @param licenses The license(s) of the project - **Required for Maven Central**
  * @param developers The developer(s) of the project - **Required for Maven Central**
  * @param scm The SCM (Source Code Management) data of the project - **Required for Maven Central**
+ * @param version The version of this artifact - **Required for Maven Central**
  * @param publicationName The name of the publishing publication to create
  * @param component The software component that should be published - **Required for Maven Central**
  * @param verifyMavenCentral If these parameters should be checked to see if **most** of the requirements for Maven Central are met
  * @param setupSigning If the signing plugin should be configured - **Required for Maven Central**
  * @param setupNexusPublishing If the Nexus publishing plugin should be configured - **Required for Maven Central**
- * @param configuration Extra configuration to apply to the [MavenPublication]
+ * @param preConfiguration Extra configuration to apply to the [MavenPublication] before this function
  *
- * @return The [MavenPublication] that was created
+ * @return The [MavenPublication] that was created which can be used (for example with `.apply {}`) to configure further
  */
 @API
 inline fun Project.setupPublishing(
     groupId: String? = project.group.toString(),
     artifactId: String? = project.name,
     artifacts: Collection<Any> = emptyList(),
-    snapshot: Boolean = false,
     name: String? = project.name,
     description: String? = null,
     url: String? = null,
     licenses: List<LicenseData> = emptyList(),
     developers: List<DeveloperData> = emptyList(),
     scm: SCMData? = null,
+    version: String? = project.version.toString(),
     publicationName: String = "maven",
     component: SoftwareComponent? = if (isKotlin()) components["kotlin"] else components["java"],
     packaging: String? = "jar",
     verifyMavenCentral: Boolean = false,
     setupSigning: Boolean = plugins.hasPlugin("signing"),
     setupNexusPublishing: Boolean = plugins.hasPlugin("io.github.gradle-nexus.publish-plugin"),
-    crossinline configuration: MavenPublication.() -> Unit = {},
+    crossinline preConfiguration: MavenPublication.() -> Unit = {},
 ): MavenPublication = (extensions["publications"] as PublishingExtension).publications.create<MavenPublication>(
     name = publicationName,
 ).apply {
-    configuration()
+    preConfiguration()
 
     val requireForCentral: (
         condition: Boolean,
@@ -313,12 +309,13 @@ inline fun Project.setupPublishing(
         }
     }
 
-    requireForCentral(this.groupId != null, "groupId")
-    requireForCentral(this.artifactId != null, "artifactId")
-
     groupId?.let(this::setGroupId)
     artifactId?.let(this::setArtifactId)
-    version = (project.version as String).let { if (snapshot) "$it-SNAPSHOT" else it }
+    version?.let(this::setVersion)
+
+    requireForCentral(this.groupId != null, "groupId")
+    requireForCentral(this.artifactId != null, "artifactId")
+    requireForCentral(this.version != null, "version")
 
     artifacts.forEach(this::artifact)
 
