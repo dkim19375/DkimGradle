@@ -42,6 +42,7 @@ import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.Publication
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.publish.maven.internal.publication.MavenPomInternal
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
@@ -324,17 +325,17 @@ inline fun Project.setupPublishing(
     component?.let(this::from)
 
     pom {
-        requireForCentral(name != null, "name")
+        val internalPom = this as? MavenPomInternal
         name?.let(this@pom.name::set)
-        requireForCentral(description != null, "description")
+        requireForCentral(this.name != null, "name")
         description?.let(this@pom.description::set)
-        requireForCentral(url != null, "url")
+        requireForCentral(this.description != null, "description")
         url?.let(this@pom.url::set)
+        requireForCentral(this.url != null, "url")
 
-        requireForCentral(packaging != null, "packaging")
         packaging?.let(this@pom::setPackaging)
+        requireForCentral(this.packaging != null, "packaging")
 
-        requireForCentral(licenses.isNotEmpty(), "licenses")
         if (licenses.isNotEmpty()) {
             licenses {
                 licenses.forEach {
@@ -347,8 +348,9 @@ inline fun Project.setupPublishing(
                 }
             }
         }
+        requireForCentral(licenses.isNotEmpty() || !internalPom?.licenses.isNullOrEmpty(), "licenses")
+
         val filteredDevs = developers.filterNot(DeveloperData::isEmpty)
-        requireForCentral(filteredDevs.isNotEmpty(), "developers")
         if (filteredDevs.isNotEmpty()) {
             developers {
                 filteredDevs.forEach {
@@ -366,8 +368,8 @@ inline fun Project.setupPublishing(
                 }
             }
         }
+        requireForCentral(filteredDevs.isNotEmpty() || !internalPom?.developers.isNullOrEmpty(), "developers")
 
-        requireForCentral(scm != null, "scm")
         if (scm != null) {
             scm {
                 connection.set(scm.connection)
@@ -377,11 +379,14 @@ inline fun Project.setupPublishing(
                 scm.tag?.let(this.tag::set)
             }
         }
+        requireForCentral(scm != null || internalPom?.scm != null, "scm")
     }
 
-    requireForCentral(setupSigning, "setupSigning")
     if (setupSigning) {
         setupSigning(this)
+    } else if (verifyMavenCentral) {
+        logger.warn("Calling `setupPublishing` without 'setupSigning' while verifying for Maven Central!")
+        logger.warn("Please note that Maven Central requires signing")
     }
 
     if (setupNexusPublishing) {
