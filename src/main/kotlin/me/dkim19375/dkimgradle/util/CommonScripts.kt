@@ -291,6 +291,7 @@ inline fun Project.setupPublishing(
     scm: SCMData? = null,
     publicationName: String = "maven",
     component: SoftwareComponent? = if (isKotlin()) components["kotlin"] else components["java"],
+    packaging: String? = "jar",
     verifyMavenCentral: Boolean = false,
     setupSigning: Boolean = plugins.hasPlugin("signing"),
     setupNexusPublishing: Boolean = plugins.hasPlugin("io.github.gradle-nexus.publish-plugin"),
@@ -330,7 +331,8 @@ inline fun Project.setupPublishing(
         requireForCentral(url != null, "url")
         url?.let(this@pom.url::set)
 
-        packaging = "jar"
+        requireForCentral(packaging != null, "packaging")
+        packaging?.let(this@pom::setPackaging)
 
         requireForCentral(licenses.isNotEmpty(), "licenses")
         if (licenses.isNotEmpty()) {
