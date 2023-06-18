@@ -255,13 +255,51 @@ fun Project.relocate(from: String, to: String) {
 }
 
 /**
- * Applies the `maven-publish` plugin and configures the [MavenPublication]
+ * Sets up a simple publishing configuration
+ *
+ * 1. Applies the `maven-publish` plugin
+ * 2. Creates a [MavenPublication] with the specified parameters
+ * 3. Configures the [MavenPublication] with the specified [configuration]
+ *
+ * @param groupId The group ID
+ * @param artifactId The artifact ID
+ * @param version The version
+ * @param component The [SoftwareComponent] to publish
+ * @param artifacts The artifacts to publish
+ * @param configuration The configuration of the [MavenPublication]
+ *
+ * @return The [MavenPublication] that was created
+ */
+inline fun Project.setupPublishing(
+    groupId: String? = null,
+    artifactId: String? = null,
+    version: String? = null,
+    component: SoftwareComponent? = if (isKotlin()) components["kotlin"] else components["java"],
+    artifacts: Collection<Any> = emptyList(),
+    crossinline configuration: MavenPublication.() -> Unit
+): MavenPublication {
+    apply(plugin = "maven-publish")
+    return (extensions["publishing"] as PublishingExtension).publications.create<MavenPublication>("maven") {
+        groupId?.let { this.groupId = it }
+        artifactId?.let { this.artifactId = it }
+        version?.let { this.version = it }
+        component?.let { this.from(component) }
+        artifacts.forEach(this::artifact)
+        configuration()
+    }
+}
+
+/**
+ * Sets up a more advanced publishing configuration geared towards Maven Central
+ *
+ * 1. Calls [setupPublishing] with the specified parameters
+ * 2. Configures the [MavenPublication] with the specified parameters
+ * 3. Calls [setupSigning(...)][me.dkim19375.dkimgradle.util.setupSigning] with the specified parameters if [setupSigning] is true
+ * 4. Calls [setupNexusPublishing(...)][me.dkim19375.dkimgradle.util.setupNexusPublishing] with the specified parameters if [setupNexusPublishing] is true
  *
  * @param groupId The group ID to publish to (ex: `io.github.username`) - **Required for Maven Central**
  * @param artifactId The artifact ID to publish to (ex: `cool-library`) - **Required for Maven Central**
- * @param artifacts The artifacts to include (see [MavenPublication.artifact] for more information)
- * *May need to add sources and javadocs jar which are required for Maven Central*
- *
+ * @param artifacts The artifacts to include (see [MavenPublication.artifact] for more information) *May need to add sources and javadocs jar which are required for Maven Central*
  * @param snapshot If this artifact is a snapshot version
  * @param name The name of the project - **Required for Maven Central**
  * @param description The description of the project - **Required for Maven Central**
@@ -279,9 +317,10 @@ fun Project.relocate(from: String, to: String) {
  * @return The [MavenPublication] that was created
  */
 @API
-inline fun Project.setupPublishing(
+inline fun Project.setupPublishingCentral(
     groupId: String? = project.group.toString(),
     artifactId: String? = project.name,
+    version: String? = project.version.toString(),
     artifacts: Collection<Any> = emptyList(),
     snapshot: Boolean = false,
     name: String? = project.name,
@@ -290,54 +329,38 @@ inline fun Project.setupPublishing(
     licenses: List<LicenseData> = emptyList(),
     developers: List<DeveloperData> = emptyList(),
     scm: SCMData? = null,
-    publicationName: String = "maven",
     component: SoftwareComponent? = if (isKotlin()) components["kotlin"] else components["java"],
     packaging: String? = "jar",
     verifyMavenCentral: Boolean = false,
     setupSigning: Boolean = plugins.hasPlugin("signing"),
     setupNexusPublishing: Boolean = plugins.hasPlugin("io.github.gradle-nexus.publish-plugin"),
     crossinline configuration: MavenPublication.() -> Unit = {},
-): MavenPublication = (extensions["publications"] as PublishingExtension).publications.create<MavenPublication>(
-    name = publicationName,
-).apply {
-    configuration()
-
-    val requireForCentral: (
-        condition: Boolean,
-        notSetParameter: String,
-    ) -> Unit = { condition, notSetParameter ->
-        if (verifyMavenCentral) {
-            require(condition) {
-                "Maven central verification failed! Parameter '$notSetParameter' must be set!"
-            }
+): MavenPublication {
+    val versionString = version?.let { if (snapshot) "$it-SNAPSHOT" else it }
+    setupPublishing(groupId, artifactId, versionString, component, artifacts, configuration).apply {
+        val requireForCentral: (
+            condition: Boolean,
+            notSetParameter: String,
+        ) -> Unit = { condition, notSetParameter ->
+            if (verifyMavenCentral) require(condition) { "Maven central verification failed! Parameter '$notSetParameter' must be set!" }
         }
-    }
 
-    requireForCentral(this.groupId != null, "groupId")
-    requireForCentral(this.artifactId != null, "artifactId")
+        requireForCentral(this.groupId != null, "groupId")
+        requireForCentral(this.artifactId != null, "artifactId")
 
-    groupId?.let(this::setGroupId)
-    artifactId?.let(this::setArtifactId)
-    version = (project.version as String).let { if (snapshot) "$it-SNAPSHOT" else it }
+        pom {
+            val internalPom = this as? MavenPomInternal
+            name?.let(this@pom.name::set)
+            requireForCentral(this.name != null, "name")
+            description?.let(this@pom.description::set)
+            requireForCentral(this.description != null, "description")
+            url?.let(this@pom.url::set)
+            requireForCentral(this.url != null, "url")
 
-    artifacts.forEach(this::artifact)
+            packaging?.let(this@pom::setPackaging)
+            requireForCentral(this.packaging != null, "packaging")
 
-    component?.let(this::from)
-
-    pom {
-        val internalPom = this as? MavenPomInternal
-        name?.let(this@pom.name::set)
-        requireForCentral(this.name != null, "name")
-        description?.let(this@pom.description::set)
-        requireForCentral(this.description != null, "description")
-        url?.let(this@pom.url::set)
-        requireForCentral(this.url != null, "url")
-
-        packaging?.let(this@pom::setPackaging)
-        requireForCentral(this.packaging != null, "packaging")
-
-        if (licenses.isNotEmpty()) {
-            licenses {
+            if (licenses.isNotEmpty()) licenses {
                 licenses.forEach {
                     license {
                         this.name.set(it.name)
@@ -347,12 +370,10 @@ inline fun Project.setupPublishing(
                     }
                 }
             }
-        }
-        requireForCentral(licenses.isNotEmpty() || !internalPom?.licenses.isNullOrEmpty(), "licenses")
+            requireForCentral(licenses.isNotEmpty() || !internalPom?.licenses.isNullOrEmpty(), "licenses")
 
-        val filteredDevs = developers.filterNot(DeveloperData::isEmpty)
-        if (filteredDevs.isNotEmpty()) {
-            developers {
+            val filteredDevs = developers.filterNot(DeveloperData::isEmpty)
+            if (filteredDevs.isNotEmpty()) developers {
                 filteredDevs.forEach {
                     developer {
                         it.id?.let(this.id::set)
@@ -367,30 +388,26 @@ inline fun Project.setupPublishing(
                     }
                 }
             }
-        }
-        requireForCentral(filteredDevs.isNotEmpty() || !internalPom?.developers.isNullOrEmpty(), "developers")
+            requireForCentral(filteredDevs.isNotEmpty() || !internalPom?.developers.isNullOrEmpty(), "developers")
 
-        if (scm != null) {
-            scm {
+            if (scm != null) scm {
                 connection.set(scm.connection)
                 developerConnection.set(scm.developerConnection)
                 requireForCentral(scm.url != null, "scm.url")
                 scm.url?.let(this.url::set)
                 scm.tag?.let(this.tag::set)
             }
+            requireForCentral(scm != null || internalPom?.scm != null, "scm")
         }
-        requireForCentral(scm != null || internalPom?.scm != null, "scm")
-    }
 
-    if (setupSigning) {
-        setupSigning(this)
-    } else if (verifyMavenCentral) {
-        logger.warn("Calling `setupPublishing` without 'setupSigning' while verifying for Maven Central!")
-        logger.warn("Please note that Maven Central requires signing")
-    }
+        if (setupSigning) {
+            setupSigning(this)
+        } else if (verifyMavenCentral) {
+            logger.warn("Calling `setupPublishing` without 'setupSigning' while verifying for Maven Central!")
+            logger.warn("Please note that Maven Central requires signing")
+        }
 
-    if (setupNexusPublishing) {
-        setupNexusPublishing()
+        if (setupNexusPublishing) setupNexusPublishing()
     }
 }
 
