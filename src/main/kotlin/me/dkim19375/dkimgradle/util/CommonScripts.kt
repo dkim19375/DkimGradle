@@ -276,8 +276,8 @@ fun Project.relocate(
  */
 @API
 inline fun Project.setupPublishing(
-    groupId: String? = project.group.toString(),
-    artifactId: String? = project.name,
+    groupId: String? = null,
+    artifactId: String? = null,
     artifacts: Collection<Any> = emptyList(),
     name: String? = project.name,
     description: String? = null,
@@ -285,7 +285,7 @@ inline fun Project.setupPublishing(
     licenses: List<LicenseData> = emptyList(),
     developers: List<DeveloperData> = emptyList(),
     scm: SCMData? = null,
-    version: String? = project.version.toString(),
+    version: String? = null,
     publicationName: String = "maven",
     component: SoftwareComponent? = if (isKotlin()) components["kotlin"] else components["java"],
     packaging: String? = "jar",
