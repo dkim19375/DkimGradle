@@ -172,34 +172,22 @@ fun Project.addKotlinKDocSourcesJars(
 ): DocSourcesJarTasksHolder {
     check(plugins.hasPlugin("org.jetbrains.dokka")) { "Dokka plugin is not applied!" }
 
-    val sourceSets = extensions["sourceSets"] as SourceSetContainer
-    val mainSourceSet = sourceSets.named<SourceSet>("main")
-
     val dokkaTask = tasks.findByName(dokkaType.taskName) as? DokkaTask
     if (dokkaTask == null) {
-        if (dokkaType.isMultiModule) {
-            throw IllegalArgumentException(
-                "Dokka task '${dokkaType.taskName}' not found! " +
-                        "This dokka output format is for multi-module projects only."
-            )
-        }
+        require(!dokkaType.isMultiModule) { "Dokka task '${dokkaType.taskName}' not found! This dokka output format is for multi-module projects only." }
         throw IllegalArgumentException("Dokka task '${dokkaType.taskName}' not found!")
     }
 
-    val dokkaJar = tasks.create("${dokkaType.taskName}Jar", Jar::class) {
-        dependsOn(dokkaTask)
-        from(dokkaTask)
-        archiveClassifier.set(javadocClassifier)
-    }
-
-    val sourcesJar = tasks.create("sourcesJar", Jar::class) {
-        from(mainSourceSet.get().allSource.srcDirs)
-        archiveClassifier.set(sourcesClassifier)
-    }
-
     return DocSourcesJarTasksHolder(
-        javadocJarTask = dokkaJar,
-        sourcesJarTask = sourcesJar,
+        tasks.create("${dokkaType.taskName}Jar", Jar::class) {
+            dependsOn(dokkaTask)
+            from(dokkaTask)
+            archiveClassifier.set(javadocClassifier)
+        },
+        tasks.create("sourcesJar", Jar::class) {
+            from((extensions["sourceSets"] as SourceSetContainer).named<SourceSet>("main").get().allSource.srcDirs)
+            archiveClassifier.set(sourcesClassifier)
+        }
     )
 }
 
@@ -208,11 +196,7 @@ fun Project.addKotlinKDocSourcesJars(
  *
  * @param replacements A [Map] of all the replacements
  */
-fun Project.addReplacementsTask(
-    replacements: Map<String, () -> String> = mapOf(
-        "version" to version::toString
-    ),
-) {
+fun Project.addReplacementsTask(replacements: Map<String, () -> String> = mapOf("version" to version::toString)) {
     tasks.named<Copy>("processResources") {
         outputs.upToDateWhen { false }
         expand(replacements.mapValues { it.value() })
@@ -249,7 +233,7 @@ fun Project.removeBuildJarsTask(directory: String = "build/libs"): TaskRegisterD
  * @param to The package to relocate to
  */
 @API
-fun Project.relocate(from: String, to: String) {
+fun Project.relocate(from: String, to: String = "${project.group}.${project.name}.libs.${from.split(".").last()}") {
     check(hasShadowPlugin()) { "Shadow plugin is not applied!" }
     tasks.named<ShadowJar>("shadowJar") { relocate(from, to) }
 }
@@ -337,7 +321,7 @@ inline fun Project.setupPublishingCentral(
     crossinline configuration: MavenPublication.() -> Unit = {},
 ): MavenPublication {
     val versionString = version?.let { if (snapshot) "$it-SNAPSHOT" else it }
-    setupPublishing(groupId, artifactId, versionString, component, artifacts, configuration).apply {
+    return setupPublishing(groupId, artifactId, versionString, component, artifacts, configuration).apply {
         val requireForCentral: (
             condition: Boolean,
             notSetParameter: String,
