@@ -239,51 +239,14 @@ fun Project.relocate(from: String, to: String = "${project.group}.${project.name
 }
 
 /**
- * Sets up a simple publishing configuration
+ * Sets up a publishing configuration for the project
  *
- * 1. Applies the `maven-publish` plugin
- * 2. Creates a [MavenPublication] with the specified parameters
- * 3. Configures the [MavenPublication] with the specified [configuration]
- *
- * @param groupId The group ID
- * @param artifactId The artifact ID
- * @param version The version
- * @param component The [SoftwareComponent] to publish
- * @param artifacts The artifacts to publish
- * @param configuration The configuration of the [MavenPublication]
- *
- * @return The [MavenPublication] that was created
- */
-inline fun Project.setupPublishing(
-    groupId: String? = null,
-    artifactId: String? = null,
-    version: String? = null,
-    component: SoftwareComponent? = if (isKotlin()) components["kotlin"] else components["java"],
-    artifacts: Collection<Any> = emptyList(),
-    crossinline configuration: MavenPublication.() -> Unit
-): MavenPublication {
-    apply(plugin = "maven-publish")
-    return (extensions["publishing"] as PublishingExtension).publications.create<MavenPublication>("maven") {
-        groupId?.let { this.groupId = it }
-        artifactId?.let { this.artifactId = it }
-        version?.let { this.version = it }
-        component?.let { this.from(component) }
-        artifacts.forEach(this::artifact)
-        configuration()
-    }
-}
-
-/**
- * Sets up a more advanced publishing configuration geared towards Maven Central
- *
- * 1. Calls [setupPublishing] with the specified parameters
- * 2. Configures the [MavenPublication] with the specified parameters
- * 3. Calls [setupSigning(...)][me.dkim19375.dkimgradle.util.setupSigning] with the specified parameters if [setupSigning] is true
- * 4. Calls [setupNexusPublishing(...)][me.dkim19375.dkimgradle.util.setupNexusPublishing] with the specified parameters if [setupNexusPublishing] is true
+ * 1. Creates a [MavenPublication] with the specified parameters
+ * 2. Calls [setupSigning(...)][me.dkim19375.dkimgradle.util.setupSigning] with the specified parameters if [setupSigning] is true
+ * 3. Calls [setupNexusPublishing(...)][me.dkim19375.dkimgradle.util.setupNexusPublishing] with the specified parameters if [setupNexusPublishing] is true
  *
  * @param groupId The group ID to publish to (ex: `io.github.username`) - **Required for Maven Central**
  * @param artifactId The artifact ID to publish to (ex: `cool-library`) - **Required for Maven Central**
- * @param artifacts The artifacts to include (see [MavenPublication.artifact] for more information) *May need to add sources and javadocs jar which are required for Maven Central*
  * @param snapshot If this artifact is a snapshot version
  * @param name The name of the project - **Required for Maven Central**
  * @param description The description of the project - **Required for Maven Central**
@@ -293,6 +256,7 @@ inline fun Project.setupPublishing(
  * @param scm The SCM (Source Code Management) data of the project - **Required for Maven Central**
  * @param publicationName The name of the publishing publication to create
  * @param component The software component that should be published - **Required for Maven Central**
+ * @param artifacts The artifacts to include (see [MavenPublication.artifact] for more information) *May need to add sources and javadocs jar which are required for Maven Central*
  * @param verifyMavenCentral If these parameters should be checked to see if **most** of the requirements for Maven Central are met
  * @param setupSigning If the signing plugin should be configured - **Required for Maven Central**
  * @param setupNexusPublishing If the Nexus publishing plugin should be configured - **Required for Maven Central**
@@ -301,11 +265,10 @@ inline fun Project.setupPublishing(
  * @return The [MavenPublication] that was created
  */
 @API
-inline fun Project.setupPublishingCentral(
-    groupId: String? = project.group.toString(),
-    artifactId: String? = project.name,
-    version: String? = project.version.toString(),
-    artifacts: Collection<Any> = emptyList(),
+inline fun Project.setupPublishing(
+    groupId: String? = null,
+    artifactId: String? = null,
+    version: String? = null,
     snapshot: Boolean = false,
     name: String? = project.name,
     description: String? = null,
@@ -313,15 +276,23 @@ inline fun Project.setupPublishingCentral(
     licenses: List<LicenseData> = emptyList(),
     developers: List<DeveloperData> = emptyList(),
     scm: SCMData? = null,
+    publicationName: String = "maven",
     component: SoftwareComponent? = if (isKotlin()) components["kotlin"] else components["java"],
+    artifacts: Collection<Any> = emptyList(),
     packaging: String? = "jar",
     verifyMavenCentral: Boolean = false,
     setupSigning: Boolean = plugins.hasPlugin("signing"),
     setupNexusPublishing: Boolean = plugins.hasPlugin("io.github.gradle-nexus.publish-plugin"),
     crossinline configuration: MavenPublication.() -> Unit = {},
 ): MavenPublication {
-    val versionString = version?.let { if (snapshot) "$it-SNAPSHOT" else it }
-    return setupPublishing(groupId, artifactId, versionString, component, artifacts, configuration).apply {
+    apply(plugin = "maven-publish")
+    return (extensions["publishing"] as PublishingExtension).publications.create<MavenPublication>(publicationName) {
+        groupId?.let { this.groupId = it }
+        artifactId?.let { this.artifactId = it }
+        version?.let { this.version = if (snapshot) "$it-SNAPSHOT" else it }
+        component?.let { this.from(component) }
+        artifacts.forEach(this::artifact)
+
         val requireForCentral: (
             condition: Boolean,
             notSetParameter: String,
@@ -392,6 +363,8 @@ inline fun Project.setupPublishingCentral(
         }
 
         if (setupNexusPublishing) setupNexusPublishing()
+
+        configuration()
     }
 }
 
