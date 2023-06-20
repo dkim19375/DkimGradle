@@ -605,7 +605,7 @@ fun Project.setupTasksForMC(
         artifactClassifier = artifactClassifier,
         textEncoding = textEncoding,
     )
-    removeBuildJarsTask()
+    val removeBuildJars by removeBuildJarsTask()
     val serverRoot = serverFoldersRoot.removeSuffix("/").removeSuffix("\\")
     val deleteAll by deleteAllTask(
         deleteFilesInDirectories = serverFolderNames.map { folderName ->
@@ -614,7 +614,7 @@ fun Project.setupTasksForMC(
         fileName = jarFileName,
         dependsOnTask = dependsOnTask,
     )
-    copyFileTask(
+    val copyFile by copyFileTask(
         copyToDirectory = "$serverRoot/$mainServerName/plugins", dependsOnTask = deleteAll, jar = jar
     )
 }
