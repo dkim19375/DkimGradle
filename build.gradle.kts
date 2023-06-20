@@ -1,4 +1,9 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import me.dkim19375.dkimgradle.data.pom.DeveloperData
+import me.dkim19375.dkimgradle.data.pom.LicenseData
+import me.dkim19375.dkimgradle.data.pom.SCMData
+import me.dkim19375.dkimgradle.util.addKotlinKDocSourcesJars
+import me.dkim19375.dkimgradle.util.setupJava
+import me.dkim19375.dkimgradle.util.setupPublishing
 
 plugins {
     `kotlin-dsl`
@@ -8,22 +13,13 @@ plugins {
     id("org.jetbrains.dokka") version "1.8.20"
     id("org.cadixdev.licenser") version "0.6.1"
     id("com.gradle.plugin-publish") version "1.2.0"
+    id("io.github.dkim19375.dkim-gradle") version "1.3.5"
 }
 
 group = "me.dkim19375"
-version = "1.2.3"
+version = "1.3.5"
 
-tasks.withType<JavaCompile> {
-    sourceCompatibility = "1.8"
-    targetCompatibility = "1.8"
-    options.encoding = "UTF-8"
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
+setupJava()
 
 repositories {
     mavenCentral()
@@ -39,11 +35,7 @@ dependencies {
     compileOnly("org.jetbrains.dokka", "dokka-gradle-plugin", "1.8.20")
     compileOnly("com.github.jengelman.gradle.plugins", "shadow", "6.1.0")
     compileOnly("org.jetbrains.kotlin", "kotlin-gradle-plugin", "1.8.22")
-}
-
-license {
-    header.set(rootProject.resources.text.fromFile("LICENSE"))
-    include("**/*.kt", "**/*.groovy")
+    compileOnly("gradle.plugin.org.cadixdev.gradle", "licenser", "0.6.1")
 }
 
 private object PluginInfo {
@@ -69,43 +61,29 @@ gradlePlugin {
     }
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("pluginMaven") {
-            groupId = "io.github.dkim19375"
-            artifactId = PluginInfo.ARTIFACT_ID
-            version = project.version as String
+val docSources = addKotlinKDocSourcesJars()
 
-            pom {
-                name.set("DkimGradle")
-                description.set(PluginInfo.DESCRIPTION)
-                url.set("https://${PluginInfo.VCS}")
-
-                packaging = "jar"
-
-                licenses {
-                    license {
-                        name.set("MIT License")
-                        url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
-
-                developers {
-                    developer {
-                        id.set("dkim19375")
-                    }
-                }
-
-                scm {
-                    connection.set("scm:git:git://${PluginInfo.VCS}git")
-                    developerConnection.set("scm:git:ssh://${PluginInfo.VCS}.git")
-                    url.set("https://${PluginInfo.VCS}")
-                }
-            }
-        }
-    }
-}
-
-tasks.wrapper {
-    distributionType = Wrapper.DistributionType.ALL
-}
+setupPublishing(
+    groupId = "io.github.dkim19375",
+    artifactId = PluginInfo.ARTIFACT_ID,
+    artifacts = listOf(docSources.javadocJarTask, docSources.sourcesJarTask),
+    description = PluginInfo.DESCRIPTION,
+    url = "https://${PluginInfo.VCS}",
+    licenses = listOf(LicenseData.MIT),
+    developers = listOf(
+        DeveloperData(
+            id = "dkim19375",
+            roles = listOf("developer"),
+            timezone = "America/New_York",
+            url = "https://github.com/dkim19375",
+        )
+    ),
+    scm = SCMData(
+        connection = "scm:git:git://${PluginInfo.VCS}.git",
+        developerConnection = "scm:git:ssh://${PluginInfo.VCS.replaceFirst('/', ':')}.git",
+        url = "https://${PluginInfo.VCS}",
+    ),
+    verifyMavenCentral = true,
+    setupSigning = false,
+    setupNexusPublishing = false,
+)

@@ -33,6 +33,7 @@ import me.dkim19375.dkimgradle.data.pom.LicenseData
 import me.dkim19375.dkimgradle.data.pom.SCMData
 import me.dkim19375.dkimgradle.delegate.TaskRegisterDelegate
 import me.dkim19375.dkimgradle.enums.DokkaOutputFormat
+import org.cadixdev.gradle.licenser.LicenseExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
@@ -43,12 +44,13 @@ import org.gradle.api.publish.Publication
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.internal.publication.MavenPomInternal
+import org.gradle.api.resources.TextResource
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.jvm.tasks.Jar
-import org.gradle.kotlin.dsl.apply
+import org.gradle.api.tasks.wrapper.Wrapper
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.named
@@ -104,7 +106,6 @@ fun Project.setJavaTextEncoding(encoding: String = "UTF-8") {
  * @param javaVersion The java version to set (example: [JavaVersion.VERSION_1_8])
  */
 fun Project.setJavaVersion(javaVersion: JavaVersion = JavaVersion.VERSION_1_8) {
-    val versionNum = javaVersion.name.removePrefix("VERSION_").removePrefix("1_").toInt()
     val java: JavaPluginExtension = getJavaExtension()
     java.sourceCompatibility = javaVersion
     java.targetCompatibility = javaVersion
@@ -112,11 +113,17 @@ fun Project.setJavaVersion(javaVersion: JavaVersion = JavaVersion.VERSION_1_8) {
         return
     }
     val kotlin = extensions["kotlin"] as KotlinProjectExtension
-    kotlin.jvmToolchain(versionNum)
+    kotlin.jvmToolchain(javaVersion.getVersionNum())
     tasks.withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = versionNum.toString()
+        kotlinOptions.jvmTarget = javaVersion.getVersionString()
     }
 }
+
+fun JavaVersion.getVersionString(majorVersionOneMax: Int? = 8): String = getVersionNum().let {
+    if (majorVersionOneMax != null && it <= majorVersionOneMax) "1.$it" else it.toString()
+}
+
+fun JavaVersion.getVersionNum(): Int = name.removePrefix("VERSION_").removePrefix("1_").toInt()
 
 /**
  * Sets the artifact/archive classifier for the JAR and Shadow JAR tasks
@@ -169,6 +176,8 @@ fun Project.addKotlinKDocSourcesJars(
     dokkaType: DokkaOutputFormat = tasks.findByName(DokkaOutputFormat.HTML_MULTI_MODULE.taskName)?.let {
         DokkaOutputFormat.HTML_MULTI_MODULE
     } ?: DokkaOutputFormat.HTML,
+    javadocTaskName: String = "javadocJar",
+    sourcesTaskName: String = "sourcesJar",
 ): DocSourcesJarTasksHolder {
     check(plugins.hasPlugin("org.jetbrains.dokka")) { "Dokka plugin is not applied!" }
 
@@ -186,16 +195,50 @@ fun Project.addKotlinKDocSourcesJars(
     val sourceSets = extensions["sourceSets"] as SourceSetContainer
 
     return DocSourcesJarTasksHolder(
-        javadocJarTask = tasks.create("${dokkaType.taskName}Jar", Jar::class) {
+        javadocJarTask = tasks.create(javadocTaskName, Jar::class) {
             dependsOn(dokkaTask)
             from(dokkaTask)
             archiveClassifier.set(javadocClassifier)
         },
-        sourcesJarTask = tasks.create("sourcesJar", Jar::class) {
+        sourcesJarTask = tasks.create(sourcesTaskName, Jar::class) {
             from(sourceSets.named<SourceSet>("main").get().allSource.srcDirs)
             archiveClassifier.set(sourcesClassifier)
         },
     )
+}
+
+fun Project.setGradleWrapperDistType(type: Wrapper.DistributionType = Wrapper.DistributionType.ALL) {
+    tasks.withType<Wrapper> {
+        distributionType = type
+    }
+}
+
+fun Project.setupLicensing(
+    header: TextResource = listOf(
+        "HEADER",
+        "header",
+        "HEADER.md",
+        "header.md",
+        "LICENSE",
+        "license",
+        "LICENSE.md",
+        "license.md",
+    ).firstNotNullOfOrNull { rootProject.resources.text.fromFile(it) } ?: throw IllegalArgumentException(
+        "License (header) file not found!",
+    ),
+    include: List<String> = listOf(
+        "**/*.kt", "**/*.groovy", "**/*.java",
+    ),
+    configure: LicenseExtension.() -> Unit = {},
+) {
+    if (!plugins.hasPlugin("org.cadixdev.licenser")) {
+        throw IllegalStateException("Licenser plugin is not applied!")
+    }
+    (extensions["license"] as LicenseExtension).apply {
+        this.header.set(header)
+        include(include)
+        configure(this)
+    }
 }
 
 /**
@@ -297,7 +340,7 @@ inline fun Project.setupPublishing(
     setupSigning: Boolean = plugins.hasPlugin("signing"),
     setupNexusPublishing: Boolean = plugins.hasPlugin("io.github.gradle-nexus.publish-plugin"),
     crossinline preConfiguration: MavenPublication.() -> Unit = {},
-): MavenPublication = (extensions["publications"] as PublishingExtension).publications.create<MavenPublication>(
+): MavenPublication = (extensions["publishing"] as PublishingExtension).publications.create<MavenPublication>(
     name = publicationName,
 ).apply {
     preConfiguration()
@@ -579,31 +622,89 @@ fun Project.setupTasksForMC(
 /**
  * Sets up the project with the specified [group] and [version] for a simple Minecraft project
  *
- * Adds the text encoding, replacements, and build shadow task (if the Shadow plugin is applied)
+ * Adds the text encoding, replacements, licensing, and build shadow task (if the Shadow plugin is applied)
  *
  * @param group The group of the project (example: `me.dkim19375`)
  * @param version The version of the project (example: `1.0.0`)
  * @param javaVersion The java version of the project (example: [JavaVersion.VERSION_1_8])
  * @param replacements The replacements for the [replacements task][addReplacementsTask]
  * @param textEncoding The text encoding for the [text encoding task][setJavaTextEncoding]
+ * @param licenseHeader The license header for the [license header task][setupLicensing]
+ * @param licenseFilesInclude The files to include for the [license header task][setupLicensing]
+ * @param artifactClassifier The artifact classifier for [ShadowJar][setShadowArchiveClassifier]
  */
-@API
 fun Project.setupMC(
-    group: String,
-    version: String = "1.0.0",
+    group: String = project.group.toString(),
+    version: String = project.version.toString(),
     javaVersion: JavaVersion? = JavaVersion.VERSION_1_8,
     replacements: Map<String, () -> String>? = mapOf(
         "name" to name::toString, "version" to version::toString
     ),
     textEncoding: String? = "UTF-8",
+    licenseHeader: TextResource = listOf(
+        "HEADER",
+        "header",
+        "HEADER.md",
+        "header.md",
+        "LICENSE",
+        "license",
+        "LICENSE.md",
+        "license.md",
+    ).firstNotNullOfOrNull { rootProject.resources.text.fromFile(it) } ?: throw IllegalArgumentException(
+        "License (header) file not found!",
+    ),
+    licenseFilesInclude: List<String> = listOf(
+        "**/*.kt", "**/*.groovy", "**/*.java",
+    ),
     artifactClassifier: String? = "",
 ) {
-    apply(plugin = "java")
+    setupJava(group, version, javaVersion, textEncoding, licenseHeader, licenseFilesInclude, artifactClassifier)
+    replacements?.let(::addReplacementsTask)
+}
+
+/**
+ * Sets up the project with the specified [group] and [version] for a Java project
+ *
+ * Adds the text encoding, licensing, and build shadow task (if the Shadow plugin is applied)
+ *
+ * @param group The group of the project (example: `me.dkim19375`)
+ * @param version The version of the project (example: `1.0.0`)
+ * @param javaVersion The java version of the project (example: [JavaVersion.VERSION_1_8])
+ * @param textEncoding The text encoding for the [text encoding task][setJavaTextEncoding]
+ * @param licenseHeader The license header for the [license header task][setupLicensing]
+ * @param licenseFilesInclude The files to include for the [license header task][setupLicensing]
+ * @param artifactClassifier The artifact classifier for [ShadowJar][setShadowArchiveClassifier]
+ */
+fun Project.setupJava(
+    group: String = project.group.toString(),
+    version: String = project.version.toString(),
+    javaVersion: JavaVersion? = JavaVersion.VERSION_1_8,
+    textEncoding: String? = "UTF-8",
+    licenseHeader: TextResource = listOf(
+        "HEADER",
+        "header",
+        "HEADER.md",
+        "header.md",
+        "LICENSE",
+        "license",
+        "LICENSE.md",
+        "license.md",
+    ).find { rootProject.resources.text.fromFile(it).asFile().exists() }
+        ?.let { rootProject.resources.text.fromFile(it) }
+        ?: throw IllegalArgumentException("License (header) file not found!"),
+    licenseFilesInclude: List<String> = listOf(
+        "**/*.kt", "**/*.groovy", "**/*.java",
+    ),
+    artifactClassifier: String? = "",
+) {
     this.group = group
     this.version = version
     javaVersion?.let(::setJavaVersion)
-    replacements?.let(::addReplacementsTask)
     textEncoding?.let(::setJavaTextEncoding)
+    setGradleWrapperDistType()
+    if (plugins.hasPlugin("org.cadixdev.licenser")) {
+        setupLicensing(licenseHeader, licenseFilesInclude)
+    }
     if (hasShadowPlugin()) {
         artifactClassifier?.let(::setShadowArchiveClassifier)
         addBuildShadowTask()

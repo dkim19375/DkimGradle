@@ -24,7 +24,7 @@
 
 package me.dkim19375.dkimgradle.data
 
-import org.gradle.jvm.tasks.Jar
+import org.gradle.api.tasks.bundling.Jar
 
 data class DocSourcesJarTasksHolder(
     val javadocJarTask: Jar,
