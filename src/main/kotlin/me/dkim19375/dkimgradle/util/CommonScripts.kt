@@ -265,9 +265,17 @@ fun Project.addCompilerArgs(vararg args: String) {
  * Deletes ALL files in the specified [directory]
  *
  * @param directory The directory to delete the files from (default is "build/libs")
+ * @param runAfterTask The task that will run after this task
  * @return The [Task] that deletes the files
  */
-fun Project.removeBuildJarsTask(directory: String = "build/libs"): TaskRegisterDelegate = TaskRegisterDelegate(this) {
+fun Project.removeBuildJarsTask(
+    directory: String = "build/libs",
+    runAfterTask: Task? = null,
+): TaskRegisterDelegate = TaskRegisterDelegate(this) {
+    runAfterTask?.let {
+        it.dependsOn(this)
+        println("Task ${it.name} will run after DkimGradle task $name")
+    }
     project.tasks.findByName("classes")?.also { classes ->
         classes.dependsOn(this@TaskRegisterDelegate)
     } ?: throw IllegalStateException("classes task is not found")
@@ -480,20 +488,24 @@ fun Project.setupNexusPublishing(
  * Copies the [built file][jar] to the [directory][copyToDirectory]
  *
  * @param copyToDirectory The directory to copy the built file to
- * @param dependsOnTask The task that should run after this task, or null if non should be run
+ * @param taskToFinalize The task that will cause this task to run after
  * @param jar The [File] to copy
  * @return the [Task] that copies the file
  */
 fun Project.copyFileTask(
     copyToDirectory: String,
-    dependsOnTask: Task? = run {
+    taskToFinalize: Task? = run {
         val taskNames = listOf("deleteAll", "reobfJar", "shadowJar", "build")
         taskNames.firstNotNullOfOrNull(tasks::findByName)
             ?: throw IllegalStateException("No default dependsOn task found!")
     },
     jar: () -> File,
 ): TaskRegisterDelegate = TaskRegisterDelegate(this) {
-    dependsOnTask?.finalizedBy(this)
+    taskToFinalize?.let {
+        it.finalizedBy(this)
+        mustRunAfter(it)
+        println("DkimGradle task $name will run after ${it.name}")
+    }
     doLast {
         val jarFile = jar()
         val folder = file(rootDir).resolve(copyToDirectory).takeIf(File::exists) ?: File(copyToDirectory)
@@ -510,7 +522,7 @@ fun Project.copyFileTask(
  *
  * @param deleteFilesInDirectories Directories to search
  * @param fileName The base file name to search for (exact if [exactName] is true, otherwise startsWith)
- * @param dependsOnTask The task that should run after this task, or null if non should be run
+ * @param runAfterTask The task that should run after this task, or null if none should be run
  * @param exactName Whether the file name should be exact or should check if the file name
  * starts with [fileName]
  * @param ignoreCase Whether the file name check should ignore the case
@@ -519,7 +531,7 @@ fun Project.copyFileTask(
 fun Project.deleteAllTask(
     deleteFilesInDirectories: Collection<String>,
     fileName: String,
-    dependsOnTask: Task? = run {
+    runAfterTask: Task? = run {
         val taskNames = listOf("reobfJar", "shadowJar", "build")
         taskNames.firstNotNullOfOrNull(tasks::findByName)
             ?: throw IllegalStateException("No default dependsOn task found!")
@@ -527,7 +539,10 @@ fun Project.deleteAllTask(
     exactName: Boolean = false,
     ignoreCase: Boolean = true,
 ): TaskRegisterDelegate = TaskRegisterDelegate(this) {
-    dependsOnTask?.finalizedBy(this)
+    runAfterTask?.let {
+        it.dependsOn(this)
+        println("Task ${it.name} will run after DkimGradle task $name")
+    }
     doLast {
         for (folderName in deleteFilesInDirectories) {
             val folder = file(rootDir).resolve(folderName).takeIf(File::exists) ?: File(folderName)
@@ -605,17 +620,21 @@ fun Project.setupTasksForMC(
         artifactClassifier = artifactClassifier,
         textEncoding = textEncoding,
     )
-    val removeBuildJars by removeBuildJarsTask()
     val serverRoot = serverFoldersRoot.removeSuffix("/").removeSuffix("\\")
     val deleteAll by deleteAllTask(
         deleteFilesInDirectories = serverFolderNames.map { folderName ->
             "$serverRoot/$folderName/plugins"
         },
         fileName = jarFileName,
-        dependsOnTask = dependsOnTask,
+        runAfterTask = dependsOnTask,
+    )
+    val removeBuildJars by removeBuildJarsTask(
+        runAfterTask = dependsOnTask,
     )
     val copyFile by copyFileTask(
-        copyToDirectory = "$serverRoot/$mainServerName/plugins", dependsOnTask = deleteAll, jar = jar
+        copyToDirectory = "$serverRoot/$mainServerName/plugins",
+        taskToFinalize = dependsOnTask,
+        jar = jar
     )
 }
 
@@ -680,7 +699,7 @@ fun Project.setupJava(
     version: String = project.version.toString(),
     javaVersion: JavaVersion? = JavaVersion.VERSION_1_8,
     textEncoding: String? = "UTF-8",
-    licenseHeader: TextResource = listOf(
+    licenseHeader: TextResource? = listOf(
         "HEADER",
         "header",
         "HEADER.md",
@@ -690,8 +709,7 @@ fun Project.setupJava(
         "LICENSE.md",
         "license.md",
     ).find { rootProject.resources.text.fromFile(it).asFile().exists() }
-        ?.let { rootProject.resources.text.fromFile(it) }
-        ?: throw IllegalArgumentException("License (header) file not found!"),
+        ?.let { rootProject.resources.text.fromFile(it) },
     licenseFilesInclude: List<String> = listOf(
         "**/*.kt", "**/*.groovy", "**/*.java",
     ),
@@ -703,10 +721,13 @@ fun Project.setupJava(
     textEncoding?.let(::setJavaTextEncoding)
     setGradleWrapperDistType()
     if (plugins.hasPlugin("org.cadixdev.licenser")) {
-        setupLicensing(licenseHeader, licenseFilesInclude)
+        if (licenseHeader == null) {
+            logger.warn("License plugin applied, but the license header file could not be found")
+        } else {
+            setupLicensing(licenseHeader, licenseFilesInclude)
+        }
     }
     if (hasShadowPlugin()) {
         artifactClassifier?.let(::setShadowArchiveClassifier)
-        addBuildShadowTask()
     }
 }
