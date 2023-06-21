@@ -67,16 +67,9 @@ import java.net.URI
  * Checks if the project is using Kotlin
  */
 @API
-fun Project.isKotlin(): Boolean = setOf(
-    "kotlin-gradle-plugin",
-    "org.jetbrains.kotlin.js",
-    "org.jetbrains.kotlin.jvm",
-    "org.jetbrains.kotlin.native",
-    "org.jetbrains.kotlin.android",
-    "org.jetbrains.kotlin.multiplatform",
-).any {
-    plugins.hasPlugin(it)
-} || plugins.any { it is KotlinBasePlugin }
+fun Project.isKotlin(): Boolean = runCatching {
+    Class.forName("org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin")
+}.isSuccess
 
 /**
  * Checks if the Shadow plugin is applied
