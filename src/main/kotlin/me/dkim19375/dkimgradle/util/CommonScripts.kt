@@ -603,7 +603,7 @@ fun Project.setupTasksForMC(
             ?: throw IllegalStateException("No default dependsOn task found!")
     },
     replacements: Map<String, () -> String> = mapOf(
-        "name" to name::toString, "version" to this.version::toString
+        "name" to project.name::toString, "version" to project.version::toString
     ),
     group: String = this.group.toString(),
     version: String = this.version.toString(),
@@ -657,7 +657,7 @@ fun Project.setupMC(
     version: String = project.version.toString(),
     javaVersion: JavaVersion? = JavaVersion.VERSION_1_8,
     replacements: Map<String, () -> String>? = mapOf(
-        "name" to name::toString, "version" to version::toString
+        "name" to project.name::toString, "version" to project.version::toString
     ),
     textEncoding: String? = "UTF-8",
     licenseHeader: TextResource = listOf(
