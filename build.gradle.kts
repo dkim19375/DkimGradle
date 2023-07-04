@@ -13,7 +13,7 @@ plugins {
     id("org.jetbrains.dokka") version "1.8.20"
     id("org.cadixdev.licenser") version "0.6.1"
     id("com.gradle.plugin-publish") version "1.2.0"
-    id("io.github.dkim19375.dkim-gradle") version "1.3.5"
+    id("io.github.dkim19375.dkim-gradle") version "1.3.6"
 }
 
 group = "me.dkim19375"
