@@ -44,6 +44,7 @@ import org.gradle.api.publish.Publication
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.internal.publication.MavenPomInternal
+import org.gradle.api.publish.maven.internal.publication.MavenPublicationInternal
 import org.gradle.api.resources.TextResource
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.SourceSet
@@ -58,7 +59,6 @@ import org.gradle.kotlin.dsl.withType
 import org.gradle.plugins.signing.SigningExtension
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
-import org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
 import java.net.URI
@@ -335,16 +335,23 @@ inline fun Project.setupPublishing(
     scm: SCMData? = null,
     version: String? = null,
     publicationName: String = "maven",
-    component: SoftwareComponent? = if (isKotlin()) components["kotlin"] else components["java"],
+    component: SoftwareComponent? = if (
+        (extensions["publishing"] as PublishingExtension).publications.findByName(publicationName) != null
+    ) null else {
+        if (isKotlin()) components["kotlin"] else components["java"]
+    },
     packaging: String? = "jar",
     verifyMavenCentral: Boolean = false,
+    ignoreComponentVerification: Boolean = false,
     setupSigning: Boolean = plugins.hasPlugin("signing"),
     setupNexusPublishing: Boolean = plugins.hasPlugin("io.github.gradle-nexus.publish-plugin"),
     crossinline preConfiguration: MavenPublication.() -> Unit = {},
-): MavenPublication = (extensions["publishing"] as PublishingExtension).publications.create<MavenPublication>(
-    name = publicationName,
-).apply {
+): MavenPublication = (extensions["publishing"] as PublishingExtension).publications.let { container ->
+    container.findByName(publicationName) as? MavenPublication ?: container.create<MavenPublication>(publicationName)
+}.apply {
     preConfiguration()
+
+    val internalPublication = this as? MavenPublicationInternal
 
     val requireForCentral: (
         condition: Boolean,
@@ -368,6 +375,10 @@ inline fun Project.setupPublishing(
     artifacts.forEach(this::artifact)
 
     component?.let(this::from)
+
+    if (internalPublication != null && !ignoreComponentVerification) {
+        requireForCentral(internalPublication.component != null, "component")
+    }
 
     pom {
         val internalPom = this as? MavenPomInternal
