@@ -41,7 +41,9 @@ dependencies {
 private object PluginInfo {
     const val ARTIFACT_ID = "dkim-gradle"
     const val DESCRIPTION = "Gradle plugin helpful in creating plugins"
-    const val VCS = "github.com/dkim19375/DkimGradle"
+    const val VCS_USERNAME = "dkim19375"
+    const val VCS_REPOSITORY = "DkimGradle"
+    const val VCS = "github.com/$VCS_USERNAME/$VCS_REPOSITORY"
 }
 
 @Suppress("UnstableApiUsage")
@@ -61,12 +63,11 @@ gradlePlugin {
     }
 }
 
-val docSources = addKotlinKDocSourcesJars()
+addKotlinKDocSourcesJars()
 
 setupPublishing(
     groupId = "io.github.dkim19375",
     artifactId = PluginInfo.ARTIFACT_ID,
-    artifacts = listOf(docSources.javadocJarTask, docSources.sourcesJarTask),
     description = PluginInfo.DESCRIPTION,
     url = "https://${PluginInfo.VCS}",
     licenses = listOf(LicenseData.MIT),
@@ -78,12 +79,15 @@ setupPublishing(
             url = "https://github.com/dkim19375",
         )
     ),
-    scm = SCMData(
-        connection = "scm:git:git://${PluginInfo.VCS}.git",
-        developerConnection = "scm:git:ssh://${PluginInfo.VCS.replaceFirst('/', ':')}.git",
-        url = "https://${PluginInfo.VCS}",
+    scm = SCMData.generateGit(
+        username = PluginInfo.VCS_USERNAME,
+        repository = PluginInfo.VCS_REPOSITORY,
+        developerSSH = true,
     ),
+    publicationName = "pluginMaven",
+    component = null,
     verifyMavenCentral = true,
+    ignoreComponentVerification = true,
     setupSigning = false,
     setupNexusPublishing = false,
 )
