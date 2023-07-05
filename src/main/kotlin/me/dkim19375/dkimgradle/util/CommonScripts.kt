@@ -39,6 +39,7 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.component.SoftwareComponent
+import org.gradle.api.plugins.JavaApplication
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.Publication
 import org.gradle.api.publish.PublishingExtension
@@ -51,7 +52,6 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.api.tasks.wrapper.Wrapper
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.named
@@ -126,6 +126,12 @@ fun JavaVersion.getVersionNum(): Int = name.removePrefix("VERSION_").removePrefi
 fun Project.setShadowArchiveClassifier(classifier: String = "") {
     check(hasShadowPlugin()) { "Shadow plugin is not applied!" }
     tasks.named<ShadowJar>("shadowJar") { archiveClassifier.set(classifier) }
+    if (classifier.isEmpty()) {
+        tasks.named<Jar>("jar") {
+            enabled = false
+            mustRunAfter(tasks.named<ShadowJar>("shadowJar"))
+        }
+    }
 }
 
 /**
@@ -198,12 +204,6 @@ fun Project.addKotlinKDocSourcesJars(
             archiveClassifier.set(sourcesClassifier)
         },
     )
-}
-
-fun Project.setGradleWrapperDistType(type: Wrapper.DistributionType = Wrapper.DistributionType.ALL) {
-    tasks.withType<Wrapper> {
-        distributionType = type
-    }
 }
 
 fun Project.setupLicensing(
@@ -697,6 +697,7 @@ fun Project.setupMC(
  * @param licenseHeader The license header for the [license header task][setupLicensing]
  * @param licenseFilesInclude The files to include for the [license header task][setupLicensing]
  * @param artifactClassifier The artifact classifier for [ShadowJar][setShadowArchiveClassifier]
+ * @param mainClassName The main class name to apply to the Application plugin
  */
 fun Project.setupJava(
     group: String = project.group.toString(),
@@ -718,12 +719,12 @@ fun Project.setupJava(
         "**/*.kt", "**/*.groovy", "**/*.java",
     ),
     artifactClassifier: String? = "",
+    mainClassName: String? = null,
 ) {
     this.group = group
     this.version = version
     javaVersion?.let(::setJavaVersion)
     textEncoding?.let(::setJavaTextEncoding)
-    setGradleWrapperDistType()
     if (plugins.hasPlugin("org.cadixdev.licenser")) {
         if (licenseHeader == null) {
             logger.warn("License plugin applied, but the license header file could not be found")
@@ -733,5 +734,19 @@ fun Project.setupJava(
     }
     if (hasShadowPlugin()) {
         artifactClassifier?.let(::setShadowArchiveClassifier)
+    }
+    mainClassName?.let(::setMainClassName)
+}
+
+fun Project.setMainClassName(mainClassName: String) {
+    if (plugins.hasPlugin("application")) {
+        val application = extensions["application"] as JavaApplication
+        application.mainClass.set(mainClassName)
+        return
+    }
+    tasks.named<Jar>("jar") {
+        manifest {
+            attributes["Main-Class"] = mainClassName
+        }
     }
 }
