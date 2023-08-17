@@ -12,7 +12,7 @@ plugins {
     kotlin("jvm") version "1.9.0"
     id("org.jetbrains.dokka") version "1.8.20"
     id("org.cadixdev.licenser") version "0.6.1"
-    id("com.gradle.plugin-publish") version "1.2.0"
+    id("com.gradle.plugin-publish") version "1.2.1"
     id("io.github.dkim19375.dkim-gradle") version "1.3.7"
 }
 
