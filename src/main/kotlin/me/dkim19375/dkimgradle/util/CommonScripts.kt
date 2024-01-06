@@ -377,7 +377,7 @@ inline fun Project.setupPublishing(
     component?.let(this::from)
 
     if (internalPublication != null && !ignoreComponentVerification) {
-        requireForCentral(internalPublication.component != null, "component")
+        requireForCentral(internalPublication.component.isPresent, "component")
     }
 
     pom {
