@@ -137,6 +137,7 @@ fun Project.setShadowArchiveClassifier(classifier: String = "") {
 /**
  * Adds the task that makes `gradle build` run `gradle shadowJar`
  */
+@API
 fun Project.addBuildShadowTask() {
     check(hasShadowPlugin()) { "Shadow plugin is not applied!" }
     tasks.named<DefaultTask>("build") { dependsOn("shadowJar") }
