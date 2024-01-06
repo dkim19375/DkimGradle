@@ -217,9 +217,9 @@ fun Project.setupLicensing(
         "license",
         "LICENSE.md",
         "license.md",
-    ).firstNotNullOfOrNull { rootProject.resources.text.fromFile(it) } ?: throw IllegalArgumentException(
-        "License (header) file not found!",
-    ),
+    ).firstNotNullOfOrNull { path ->
+        rootProject.resources.text.fromFile(path).takeIf { it.asFile().exists() }
+    } ?: throw IllegalArgumentException("License (header) file not found!"),
     include: List<String> = listOf(
         "**/*.kt", "**/*.groovy", "**/*.java",
     ),
@@ -615,6 +615,19 @@ fun Project.setupTasksForMC(
     javaVersion: JavaVersion = JavaVersion.VERSION_1_8,
     artifactClassifier: String = "",
     textEncoding: String = "UTF-8",
+    licenseHeader: TextResource? = listOf(
+        "HEADER",
+        "header",
+        "HEADER.md",
+        "header.md",
+        "LICENSE",
+        "license",
+        "LICENSE.md",
+        "license.md",
+    ).firstNotNullOfOrNull { path ->
+        rootProject.resources.text.fromFile(path).takeIf { it.asFile().exists() }
+    },
+    licenseFilesInclude: List<String> = listOf("**/*.kt", "**/*.groovy", "**/*.java"),
     jar: () -> File,
 ) {
     setupMC(
@@ -624,6 +637,8 @@ fun Project.setupTasksForMC(
         javaVersion = javaVersion,
         artifactClassifier = artifactClassifier,
         textEncoding = textEncoding,
+        licenseHeader = licenseHeader,
+        licenseFilesInclude = licenseFilesInclude,
     )
     val serverRoot = serverFoldersRoot.removeSuffix("/").removeSuffix("\\")
     val deleteAll by deleteAllTask(
@@ -665,7 +680,7 @@ fun Project.setupMC(
         "name" to project.name::toString, "version" to project.version::toString
     ),
     textEncoding: String? = "UTF-8",
-    licenseHeader: TextResource = listOf(
+    licenseHeader: TextResource? = listOf(
         "HEADER",
         "header",
         "HEADER.md",
@@ -674,9 +689,9 @@ fun Project.setupMC(
         "license",
         "LICENSE.md",
         "license.md",
-    ).firstNotNullOfOrNull { rootProject.resources.text.fromFile(it) } ?: throw IllegalArgumentException(
-        "License (header) file not found!",
-    ),
+    ).firstNotNullOfOrNull { path ->
+        rootProject.resources.text.fromFile(path).takeIf { it.asFile().exists() }
+    },
     licenseFilesInclude: List<String> = listOf(
         "**/*.kt", "**/*.groovy", "**/*.java",
     ),
@@ -714,8 +729,9 @@ fun Project.setupJava(
         "license",
         "LICENSE.md",
         "license.md",
-    ).find { rootProject.resources.text.fromFile(it).asFile().exists() }
-        ?.let { rootProject.resources.text.fromFile(it) },
+    ).firstNotNullOfOrNull { path ->
+        rootProject.resources.text.fromFile(path).takeIf { it.asFile().exists() }
+    },
     licenseFilesInclude: List<String> = listOf(
         "**/*.kt", "**/*.groovy", "**/*.java",
     ),
