@@ -31,7 +31,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
     // Plugins
-    compileOnly("io.github.gradle-nexus", "publish-plugin", "1.3.0")
+    compileOnly("io.github.gradle-nexus", "publish-plugin", "2.0.0")
     compileOnly("org.jetbrains.dokka", "dokka-gradle-plugin", "1.9.20")
     compileOnly("com.github.jengelman.gradle.plugins", "shadow", "6.1.0")
     compileOnly("org.jetbrains.kotlin", "kotlin-gradle-plugin", "1.9.24")
