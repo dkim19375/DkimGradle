@@ -6,6 +6,7 @@ name: Testing CI with Gradle
 on:
   push:
   pull_request:
+    types: [opened]
 
 jobs:
   build:
