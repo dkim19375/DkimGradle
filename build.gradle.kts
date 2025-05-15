@@ -9,7 +9,7 @@ plugins {
     `kotlin-dsl`
     `maven-publish`
     `java-gradle-plugin`
-    kotlin("jvm") version "1.9.25"
+    kotlin("jvm") version "2.1.21"
     id("org.jetbrains.dokka") version "1.9.20"
     id("org.cadixdev.licenser") version "0.6.1"
     id("com.gradle.plugin-publish") version "1.3.1"
@@ -34,7 +34,7 @@ dependencies {
     compileOnly("io.github.gradle-nexus", "publish-plugin", "2.0.0")
     compileOnly("org.jetbrains.dokka", "dokka-gradle-plugin", "1.9.20")
     compileOnly("com.github.jengelman.gradle.plugins", "shadow", "6.1.0")
-    compileOnly("org.jetbrains.kotlin", "kotlin-gradle-plugin", "1.9.25")
+    compileOnly("org.jetbrains.kotlin", "kotlin-gradle-plugin", "2.1.21")
     compileOnly("gradle.plugin.org.cadixdev.gradle", "licenser", "0.6.1")
 }
 
