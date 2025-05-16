@@ -492,7 +492,7 @@ inline fun Project.setupPublishing(
             }
 
             if (setupNexusPublishing) {
-                setupNexusPublishing()
+                setupNexusPublishing(groupId ?: project.group as String)
             }
         }
 
