@@ -22,27 +22,14 @@
  * SOFTWARE.
  */
 
-package me.dkim19375.dkimgradle.data.pom
+package me.dkim19375.dkimgradle.data
 
-data class DeveloperData(
-    val id: String? = null,
-    val url: String? = null,
-    val timezone: String? = null,
-    val roles: List<String> = emptyList(),
-    val email: String? = null,
-    val name: String? = null,
-    val organization: String? = null,
-    val organizationUrl: String? = null,
-    val properties: Map<String, String> = emptyMap(),
-) {
-    fun isEmpty(): Boolean =
-        id == null &&
-            url == null &&
-            timezone == null &&
-            roles.isEmpty() &&
-            email == null &&
-            name == null &&
-            organization == null &&
-            organizationUrl == null &&
-            properties.isEmpty()
-}
+import java.util.EnumMap
+import me.dkim19375.dkimgradle.enums.DokkatooOutputFormat
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.bundling.Jar
+
+data class KotlinDocSourcesJarTasksHolder(
+    val javadocJarTasks: EnumMap<DokkatooOutputFormat, TaskProvider<Jar>>,
+    val sourcesJarTask: TaskProvider<Jar>,
+)

@@ -31,27 +31,28 @@ data class LicenseData(
     val comments: String? = null,
 ) {
     companion object {
-        val MIT = LicenseData(
-            name = "MIT",
-            url = "https://opensource.org/licenses/MIT",
-            distribution = LicenseDistribution.REPO,
-        )
-        val APACHE_2_0 = LicenseData(
-            name = "Apache-2.0",
-            url = "https://www.apache.org/licenses/LICENSE-2.0.txt",
-            distribution = LicenseDistribution.REPO,
-        )
-        val GPL_V3 = LicenseData(
-            name = "GPL-3.0",
-            url = "https://www.gnu.org/licenses/gpl-3.0.en.html",
-            distribution = LicenseDistribution.REPO,
-        )
+        val MIT =
+            LicenseData(
+                name = "MIT",
+                url = "https://opensource.org/licenses/MIT",
+                distribution = LicenseDistribution.REPO,
+            )
+        val APACHE_2_0 =
+            LicenseData(
+                name = "Apache-2.0",
+                url = "https://www.apache.org/licenses/LICENSE-2.0.txt",
+                distribution = LicenseDistribution.REPO,
+            )
+        val GPL_V3 =
+            LicenseData(
+                name = "GPL-3.0",
+                url = "https://www.gnu.org/licenses/gpl-3.0.en.html",
+                distribution = LicenseDistribution.REPO,
+            )
     }
 
     enum class LicenseDistribution(val value: String) {
-        /**
-         * May be downloaded from a Maven repository
-         */
+        /** May be downloaded from a Maven repository */
         REPO("repo"),
 
         /**

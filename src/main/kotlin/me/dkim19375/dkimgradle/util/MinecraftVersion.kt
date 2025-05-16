@@ -33,7 +33,9 @@ class MinecraftVersion(version: String) : Comparable<MinecraftVersion> {
 
     init {
         val versionSplit = version.split('.')
-        require(versionSplit.size >= 2) { "Failed to parse Minecraft version (invalid version string): $version" }
+        require(versionSplit.size >= 2) {
+            "Failed to parse Minecraft version (invalid version string): $version"
+        }
 
         // Get patch
         try {
@@ -41,7 +43,9 @@ class MinecraftVersion(version: String) : Comparable<MinecraftVersion> {
             minor = versionSplit[1].toInt()
             patch = versionSplit.getOrElse(2) { "0" }.toInt()
         } catch (e: NumberFormatException) {
-            throw IllegalArgumentException("Failed to parse Minecraft version (invalid values): $version")
+            throw IllegalArgumentException(
+                "Failed to parse Minecraft version (invalid values): $version"
+            )
         }
     }
 

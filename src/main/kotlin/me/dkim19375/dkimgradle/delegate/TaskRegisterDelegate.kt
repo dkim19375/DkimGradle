@@ -24,10 +24,10 @@
 
 package me.dkim19375.dkimgradle.delegate
 
-import org.gradle.api.Project
-import org.gradle.api.Task
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
+import org.gradle.api.Project
+import org.gradle.api.Task
 
 class TaskRegisterDelegate(
     private val project: Project,
@@ -36,13 +36,13 @@ class TaskRegisterDelegate(
     private var task: Task? = null
 
     operator fun provideDelegate(ref: Any?, property: KProperty<*>): ReadOnlyProperty<Any?, Task> {
-        task = project.tasks.register(property.name) {
-            action(this, property.name)
-        }.get()
+        task = project.tasks.register(property.name) { action(this, property.name) }.get()
         return this
     }
 
-    override fun getValue(thisRef: Any?, property: KProperty<*>): Task = task ?: throw IllegalStateException(
-        "Task not initialized yet! (provideDelegate wasn't called)"
-    )
+    override fun getValue(thisRef: Any?, property: KProperty<*>): Task =
+        task
+            ?: throw IllegalStateException(
+                "Task not initialized yet! (provideDelegate wasn't called)"
+            )
 }

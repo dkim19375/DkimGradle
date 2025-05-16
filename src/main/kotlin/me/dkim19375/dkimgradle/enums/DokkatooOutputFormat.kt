@@ -22,11 +22,15 @@
  * SOFTWARE.
  */
 
-package me.dkim19375.dkimgradle.data
+package me.dkim19375.dkimgradle.enums
 
-import org.gradle.api.tasks.bundling.Jar
+enum class DokkatooOutputFormat(pluginSuffix: String, taskSuffix: String) {
+    HTML("html", "Html"),
+    GFM("gfm", "Gfm"),
+    JAVADOC("javadoc", "Javadoc"),
+    JEKYLL("jekyll", "Jekyll");
 
-data class DocSourcesJarTasksHolder(
-    val javadocJarTask: Jar,
-    val sourcesJarTask: Jar,
-)
+    val publicationTaskName = "dokkatooGeneratePublication$taskSuffix"
+
+    val pluginID = "dev.adamko.dokkatoo-$pluginSuffix"
+}

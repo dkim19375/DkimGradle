@@ -9,17 +9,18 @@ plugins {
     `kotlin-dsl`
     `maven-publish`
     `java-gradle-plugin`
-    kotlin("jvm") version "2.1.21"
-    id("org.jetbrains.dokka") version "2.0.0"
-    id("org.cadixdev.licenser") version "0.6.1"
-    id("com.gradle.plugin-publish") version "1.3.1"
-    id("io.github.dkim19375.dkim-gradle") version "1.3.8"
+    alias(libs.plugins.dkim.gradle)
+    alias(libs.plugins.dokkatoo)
+    alias(libs.plugins.gradle.plugin.publish)
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.licenser)
+    alias(libs.plugins.spotless)
 }
 
 group = "me.dkim19375"
-version = "1.3.8"
+version = "1.4.0"
 
-setupJava()
+setupJava(javaVersion = JavaVersion.VERSION_11)
 
 repositories {
     mavenCentral()
@@ -31,11 +32,11 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
     // Plugins
-    compileOnly("io.github.gradle-nexus", "publish-plugin", "2.0.0")
-    compileOnly("org.jetbrains.dokka", "dokka-gradle-plugin", "2.0.0")
-    compileOnly("com.github.jengelman.gradle.plugins", "shadow", "6.1.0")
-    compileOnly("org.jetbrains.kotlin", "kotlin-gradle-plugin", "2.1.21")
-    compileOnly("gradle.plugin.org.cadixdev.gradle", "licenser", "0.6.1")
+    compileOnly(libs.kotlin.plugin)
+    compileOnly(libs.licenser)
+    compileOnly(libs.nexus.publish.plugin)
+    compileOnly(libs.shadow)
+    compileOnly(libs.spotless)
 }
 
 private object PluginInfo {
@@ -46,7 +47,6 @@ private object PluginInfo {
     const val VCS = "github.com/$VCS_USERNAME/$VCS_REPOSITORY"
 }
 
-@Suppress("UnstableApiUsage")
 gradlePlugin {
     isAutomatedPublishing = true
     website.set("https://${PluginInfo.VCS}")

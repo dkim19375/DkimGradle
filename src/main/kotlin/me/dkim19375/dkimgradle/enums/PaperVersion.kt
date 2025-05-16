@@ -29,8 +29,7 @@ import me.dkim19375.dkimgradle.util.MinecraftVersion
 enum class PaperVersion(val groupID: String, val artifactID: String) {
     BELOW_1_9("org.github.paperspigot", "paperspigot-api"),
     BELOW_1_17("com.destroystokyo.paper", "paper-api"),
-    REST("io.papermc.paper", "paper-api"),
-    ;
+    REST("io.papermc.paper", "paper-api");
 
     companion object {
         fun parse(versionString: String): PaperVersion {

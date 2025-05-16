@@ -24,9 +24,7 @@
 
 package me.dkim19375.dkimgradle.annotation
 
-/**
- * Lets the IDE know that whatever this annotation is applied to is going to be used
- */
+/** Lets the IDE know that whatever this annotation is applied to is going to be used */
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.PROPERTY,
@@ -34,7 +32,7 @@ package me.dkim19375.dkimgradle.annotation
     AnnotationTarget.CONSTRUCTOR,
     AnnotationTarget.FUNCTION,
     AnnotationTarget.FILE,
-    AnnotationTarget.VALUE_PARAMETER
+    AnnotationTarget.VALUE_PARAMETER,
 )
 @Retention(AnnotationRetention.SOURCE)
 @API // :)

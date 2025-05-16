@@ -40,7 +40,9 @@ import org.gradle.api.artifacts.dsl.DependencyHandler
 fun DependencyHandler.spigotAPI(versionString: String, project: Project? = null): String {
     val version = MinecraftVersion(versionString)
     // Repositories
-    if (version.major <= 1 && version.minor <= 15) { project?.repositories?.maven(Repository.SONATYPE_SNAPSHOTS_OLD) }
+    if (version.major <= 1 && version.minor <= 15) {
+        project?.repositories?.maven(Repository.SONATYPE_SNAPSHOTS_OLD)
+    }
     project?.repositories?.maven(Repository.MAVEN_CENTRAL, Repository.SPIGOT)
     // Dependency
     return "org.spigotmc:spigot-api:${getVersionString(versionString)}"
@@ -59,18 +61,19 @@ fun DependencyHandler.spigotNMS(versionString: String, project: Project? = null)
 }
 
 /**
- * 1. Adds the [Repository.MAVEN_CENTRAL], [Repository.SONATYPE_SNAPSHOTS_OLD], and [Repository.PAPER] repositories
+ * 1. Adds the [Repository.MAVEN_CENTRAL], [Repository.SONATYPE_SNAPSHOTS_OLD], and
+ *    [Repository.PAPER] repositories
  * 2. Adds the dependency ([PaperVersion.groupID]:[PaperVersion.artifactID]:[version]-R0.1-SNAPSHOT)
  */
 fun DependencyHandler.paper(version: String, project: Project? = null): String {
     val paperVersion: PaperVersion = PaperVersion.parse(version)
     // Repositories
-    project?.repositories?.maven(Repository.MAVEN_CENTRAL, Repository.SONATYPE_SNAPSHOTS_OLD, Repository.PAPER)
+    project
+        ?.repositories
+        ?.maven(Repository.MAVEN_CENTRAL, Repository.SONATYPE_SNAPSHOTS_OLD, Repository.PAPER)
     // Dependency
     return "${paperVersion.groupID}:${paperVersion.artifactID}:${getVersionString(version)}"
 }
 
-/**
- * Returns the version string with `-R0.1-SNAPSHOT` appended to it
- */
+/** Returns the version string with `-R0.1-SNAPSHOT` appended to it */
 fun DependencyHandler.getVersionString(version: String): String = "${version}-R0.1-SNAPSHOT"

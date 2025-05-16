@@ -22,16 +22,12 @@
  * SOFTWARE.
  */
 
-package me.dkim19375.dkimgradle.enums
+package me.dkim19375.dkimgradle.data
 
-enum class DokkaOutputFormat(val taskName: String, val isMultiModule: Boolean = false) {
-    HTML("dokkaHtml"),
-    GFM("dokkaGfm"),
-    JAVADOC("dokkaJavadoc"),
-    JEKYLL("dokkaJekyll"),
+import me.dkim19375.dkimgradle.enums.DokkatooOutputFormat
 
-    HTML_MULTI_MODULE("dokkaHtmlMultiModule", true),
-    GFM_MULTI_MODULE("dokkaGfmMultiModule", true),
-    JEKYLL_MULTI_MODULE("dokkaJekyllMultiModule", true),
-    ;
-}
+data class KotlinDocSourcesJarTasksInfo(
+    val format: DokkatooOutputFormat,
+    val taskName: String = "javadocJar",
+    val classifier: String = "javadoc",
+)

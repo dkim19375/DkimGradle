@@ -29,7 +29,8 @@ import me.dkim19375.dkimgradle.annotation.API
 /**
  * More information:
  * - [Maven Pom Reference](https://maven.apache.org/pom.html#scm)
- * - [Maven Central SCM Information](https://central.sonatype.org/publish/requirements/#scm-information)
+ * - [Maven Central SCM
+ *   Information](https://central.sonatype.org/publish/requirements/#scm-information)
  */
 data class SCMData(
     /**
@@ -78,8 +79,9 @@ data class SCMData(
          * @param connectionSSH Whether to use the SSH protocol for the connection
          * @param host The git server host (ex: "github.com")
          * @param connectionsProtocol The protocol for the connections (ex: "https://", "ssh://")
-         * @param developerConnectionProtocol The protocol for the developer connection
-         * (this parameter should only be configured if the protocol is not SSH and is also not the same as [connectionsProtocol])
+         * @param developerConnectionProtocol The protocol for the developer connection (this
+         *   parameter should only be configured if the protocol is not SSH and is also not the same
+         *   as [connectionsProtocol])
          * @param browserProtocol The protocol for the browser (ex: "https://")
          * @param tag The tag (ex: "HEAD")
          * @return an [SCMData] with properly configured values
@@ -95,16 +97,18 @@ data class SCMData(
             connectionsProtocol: String = if (connectionSSH) "git@" else "https://",
             browserProtocol: String = "https://",
             tag: String? = null,
-        ): SCMData = SCMData(
-            connection = "scm:git:$connectionsProtocol$host${
+        ): SCMData =
+            SCMData(
+                connection =
+                    "scm:git:$connectionsProtocol$host${
                 if (connectionSSH) ':' else '/'
             }$username/$repository.git",
-            developerConnection = "scm:git:$developerConnectionProtocol$host${
+                developerConnection =
+                    "scm:git:$developerConnectionProtocol$host${
                 if (developerSSH) ':' else '/'
             }$username/$repository.git",
-            url = "$browserProtocol$host/$username/$repository",
-            tag = tag,
-        )
-
+                url = "$browserProtocol$host/$username/$repository",
+                tag = tag,
+            )
     }
 }

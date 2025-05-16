@@ -1,0 +1,27 @@
+[versions]
+dkim-gradle = "1.4.0"
+dokkatoo = "2.4.0"
+gradle-plugin-publish = "1.3.1"
+kotlin = "2.1.21"
+licenser = "0.6.1"
+nexus-publish-plugin = "2.0.0"
+shadow = "6.1.0"
+spotless = "7.0.3"
+
+[libraries]
+licenser = { group = "gradle.plugin.org.cadixdev.gradle", name = "licenser", version.ref = "licenser" }
+kotlin-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+nexus-publish-plugin = { group = "io.github.gradle-nexus", name = "publish-plugin", version.ref = "nexus-publish-plugin" }
+shadow = { group = "com.github.jengelman.gradle.plugins", name = "shadow", version.ref = "shadow" }
+spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
+
+[plugins]
+dkim-gradle = { id = "io.github.dkim19375.dkim-gradle", version.ref = "dkim-gradle" }
+dokkatoo = { id = "dev.adamko.dokkatoo", version.ref = "dokkatoo" }
+gradle-plugin-publish = { id = "com.gradle.plugin-publish", version.ref = "gradle-plugin-publish" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+licenser = { id = "org.cadixdev.licenser", version.ref = "licenser" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+
+
+
