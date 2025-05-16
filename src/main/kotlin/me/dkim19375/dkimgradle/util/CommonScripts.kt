@@ -856,7 +856,10 @@ fun Project.setupSpotless(targets: Set<String>? = null) {
             targets?.let { target(it) }
         }
         kotlin {
-            ktfmt().kotlinlangStyle().configure { it.setManageTrailingCommas(true) }
+            ktfmt().kotlinlangStyle().configure {
+                it.setManageTrailingCommas(true)
+                it.setRemoveUnusedImports(true)
+            }
             targets?.let { target(it) }
         }
     }
