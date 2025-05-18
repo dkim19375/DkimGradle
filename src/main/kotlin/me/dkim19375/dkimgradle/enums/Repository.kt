@@ -31,7 +31,7 @@ import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.kotlin.dsl.maven
 
-enum class Repository(internal val url: String) {
+enum class Repository(val url: String) {
     /** [ArtifactRepositoryContainer.MAVEN_CENTRAL_URL] */
     MAVEN_CENTRAL(ArtifactRepositoryContainer.MAVEN_CENTRAL_URL),
     /**
