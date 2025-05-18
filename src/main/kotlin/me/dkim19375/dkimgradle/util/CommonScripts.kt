@@ -680,7 +680,7 @@ fun Project.setupTasksForMC(
     group: String = this.group.toString(),
     version: String = this.version.toString(),
     javaVersion: JavaVersion = JavaVersion.VERSION_1_8,
-    artifactClassifier: String = "",
+    artifactClassifier: String? = "",
     textEncoding: String = "UTF-8",
     licenseHeader: TextResource? =
         listOf(
