@@ -697,6 +697,8 @@ fun Project.setupTasksForMC(
                 rootProject.resources.text.fromFile(path).takeIf { it.asFile().exists() }
             },
     licenseFilesInclude: List<String> = listOf("**/*.kt", "**/*.groovy", "**/*.java"),
+    setupSpotless: Boolean = true,
+    spotlessTargets: Set<String>? = null,
     jar: () -> File,
 ) {
     setupMC(
@@ -708,6 +710,8 @@ fun Project.setupTasksForMC(
         textEncoding = textEncoding,
         licenseHeader = licenseHeader,
         licenseFilesInclude = licenseFilesInclude,
+        setupSpotless = setupSpotless,
+        spotlessTargets = spotlessTargets,
     )
     val serverRoot = serverFoldersRoot.removeSuffix("/").removeSuffix("\\")
     val deleteAll by
@@ -764,15 +768,20 @@ fun Project.setupMC(
             },
     licenseFilesInclude: List<String> = listOf("**/*.kt", "**/*.groovy", "**/*.java"),
     artifactClassifier: String? = "",
+    setupSpotless: Boolean = true,
+    spotlessTargets: Set<String>? = null,
 ) {
     setupJava(
-        group,
-        version,
-        javaVersion,
-        textEncoding,
-        licenseHeader,
-        licenseFilesInclude,
-        artifactClassifier,
+        group = group,
+        version = version,
+        javaVersion = javaVersion,
+        textEncoding = textEncoding,
+        licenseHeader = licenseHeader,
+        licenseFilesInclude = licenseFilesInclude,
+        artifactClassifier = artifactClassifier,
+        mainClassName = null,
+        setupSpotless = setupSpotless,
+        spotlessTargets = spotlessTargets,
     )
     replacements?.let(::addReplacementsTask)
 }
