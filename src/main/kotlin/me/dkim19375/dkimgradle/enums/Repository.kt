@@ -89,7 +89,8 @@ enum class Repository(val url: String) {
     /**
      * [https://nexus.umbcraft.online/repository/umbcraft-pub/](https://nexus.umbcraft.online/repository/umbcraft-pub/)
      */
-    UMB_CRAFT("https://nexus.umbcraft.online/repository/umbcraft-pub/"),
+    // Keeps going offline
+    // UMB_CRAFT("https://nexus.umbcraft.online/repository/umbcraft-pub/"),
     /**
      * [https://repo.extendedclip.com/content/repositories/placeholderapi/](https://repo.extendedclip.com/content/repositories/placeholderapi/)
      */
@@ -109,15 +110,16 @@ enum class Repository(val url: String) {
     /** [https://redempt.dev/](https://redempt.dev/) */
     REDEMPT("https://redempt.dev/"),
     /** [https://repo.kryptonmc.org/releases/](https://repo.kryptonmc.org/releases/) */
-    KRYPTON_RELEASES("https://repo.kryptonmc.org/releases/"),
+    // KRYPTON_RELEASES("https://repo.kryptonmc.org/releases/"),
     /** [https://repo.kryptonmc.org/snapshots/](https://repo.kryptonmc.org/snapshots/) */
-    KRYPTON_SNAPSHOTS("https://repo.kryptonmc.org/snapshots/"),
+    // KRYPTON_SNAPSHOTS("https://repo.kryptonmc.org/snapshots/"),
 
     // keep at bottom
     /** [https://repo.essentialsx.net/releases/](https://repo.essentialsx.net/releases/) */
     ESSENTIALS_RELEASES("https://repo.essentialsx.net/releases/"),
     /** [https://repo.essentialsx.net/snapshots/](https://repo.essentialsx.net/snapshots/) */
     ESSENTIALS_SNAPSHOTS("https://repo.essentialsx.net/snapshots/"),
+
 }
 
 fun RepositoryHandler.maven(
