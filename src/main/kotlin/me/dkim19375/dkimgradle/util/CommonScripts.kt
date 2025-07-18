@@ -860,12 +860,12 @@ fun Project.setupSpotless(targets: Set<String>? = null) {
     val extension = extensions["spotless"] as SpotlessExtension
     extension.run {
         java {
-            palantirJavaFormat("2.67.0").formatJavadoc(true)
+            palantirJavaFormat("2.72.0").formatJavadoc(true)
             formatAnnotations()
             targets?.let { target(it) }
         }
         kotlin {
-            ktfmt().kotlinlangStyle().configure {
+            ktfmt("0.56").kotlinlangStyle().configure {
                 it.setManageTrailingCommas(true)
                 it.setRemoveUnusedImports(true)
             }
