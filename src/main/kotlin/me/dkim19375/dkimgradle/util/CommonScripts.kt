@@ -96,9 +96,9 @@ fun Project.setJavaTextEncoding(encoding: String = "UTF-8") {
 /**
  * Sets the Java version for the project
  *
- * @param javaVersion The java version to set (example: [JavaVersion.VERSION_1_8])
+ * @param javaVersion The java version to set (example: [JavaVersion.VERSION_21])
  */
-fun Project.setJavaVersion(javaVersion: JavaVersion = JavaVersion.VERSION_1_8) {
+fun Project.setJavaVersion(javaVersion: JavaVersion = JavaVersion.VERSION_21) {
     val java: JavaPluginExtension = getJavaExtension()
     java.sourceCompatibility = javaVersion
     java.targetCompatibility = javaVersion
@@ -679,7 +679,7 @@ fun Project.setupTasksForMC(
         mapOf("name" to project.name::toString, "version" to project.version::toString),
     group: String = this.group.toString(),
     version: String = this.version.toString(),
-    javaVersion: JavaVersion = JavaVersion.VERSION_1_8,
+    javaVersion: JavaVersion = JavaVersion.VERSION_21,
     artifactClassifier: String? = "",
     textEncoding: String = "UTF-8",
     licenseHeader: TextResource? =
@@ -738,7 +738,7 @@ fun Project.setupTasksForMC(
  *
  * @param group The group of the project (example: `me.dkim19375`)
  * @param version The version of the project (example: `1.0.0`)
- * @param javaVersion The java version of the project (example: [JavaVersion.VERSION_1_8])
+ * @param javaVersion The java version of the project (example: [JavaVersion.VERSION_21])
  * @param replacements The replacements for the [replacements task][addReplacementsTask]
  * @param textEncoding The text encoding for the [text encoding task][setJavaTextEncoding]
  * @param licenseHeader The license header for the [license header task][setupLicensing]
@@ -748,7 +748,7 @@ fun Project.setupTasksForMC(
 fun Project.setupMC(
     group: String = project.group.toString(),
     version: String = project.version.toString(),
-    javaVersion: JavaVersion? = JavaVersion.VERSION_1_8,
+    javaVersion: JavaVersion? = JavaVersion.VERSION_21,
     replacements: Map<String, () -> String>? =
         mapOf("name" to project.name::toString, "version" to project.version::toString),
     textEncoding: String? = "UTF-8",
@@ -793,7 +793,7 @@ fun Project.setupMC(
  *
  * @param group The group of the project (example: `me.dkim19375`)
  * @param version The version of the project (example: `1.0.0`)
- * @param javaVersion The java version of the project (example: [JavaVersion.VERSION_1_8])
+ * @param javaVersion The java version of the project (example: [JavaVersion.VERSION_21])
  * @param textEncoding The text encoding for the [text encoding task][setJavaTextEncoding]
  * @param licenseHeader The license header for the [license header task][setupLicensing]
  * @param licenseFilesInclude The files to include for the [license header task][setupLicensing]
@@ -803,7 +803,7 @@ fun Project.setupMC(
 fun Project.setupJava(
     group: String = project.group.toString(),
     version: String = project.version.toString(),
-    javaVersion: JavaVersion? = JavaVersion.VERSION_1_8,
+    javaVersion: JavaVersion? = JavaVersion.VERSION_21,
     textEncoding: String? = "UTF-8",
     licenseHeader: TextResource? =
         listOf(
