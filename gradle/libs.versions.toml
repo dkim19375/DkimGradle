@@ -1,5 +1,5 @@
 [versions]
-dkim-gradle = "1.4.7"
+dkim-gradle = "1.4.8"
 dokkatoo = "2.4.0"
 gradle-plugin-publish = "2.0.0"
 kotlin = "2.2.21"
