@@ -18,7 +18,7 @@ plugins {
 }
 
 group = "me.dkim19375"
-version = "1.4.7"
+version = "1.4.8"
 
 setupJava(javaVersion = JavaVersion.VERSION_11)
 

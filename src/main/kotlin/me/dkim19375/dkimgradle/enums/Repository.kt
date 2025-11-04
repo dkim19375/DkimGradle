@@ -109,6 +109,8 @@ enum class Repository(val url: String) {
     ENGINE_HUB("https://maven.enginehub.org/repo/"),
     /** [https://redempt.dev/](https://redempt.dev/) */
     REDEMPT("https://redempt.dev/"),
+    /** [https://repo.opencollab.dev/main/](https://repo.opencollab.dev/main/) */
+    OPEN_COLLABORATION("https://repo.opencollab.dev/main/"),
     /** [https://repo.kryptonmc.org/releases/](https://repo.kryptonmc.org/releases/) */
     // KRYPTON_RELEASES("https://repo.kryptonmc.org/releases/"),
     /** [https://repo.kryptonmc.org/snapshots/](https://repo.kryptonmc.org/snapshots/) */
