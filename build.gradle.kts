@@ -12,7 +12,6 @@ plugins {
     alias(libs.plugins.dkim.gradle)
     alias(libs.plugins.dokkatoo)
     alias(libs.plugins.gradle.plugin.publish)
-    alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.licenser)
     alias(libs.plugins.spotless)
 }
@@ -29,7 +28,7 @@ repositories {
 
 dependencies {
     implementation(gradleApi())
-    implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("stdlib"))
 
     // Plugins
     compileOnly(libs.kotlin.plugin)
