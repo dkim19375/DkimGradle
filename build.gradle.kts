@@ -18,9 +18,9 @@ plugins {
 }
 
 group = "me.dkim19375"
-version = "1.4.8"
+version = "1.4.9"
 
-setupJava(javaVersion = JavaVersion.VERSION_11)
+setupJava(javaVersion = JavaVersion.VERSION_17)
 
 repositories {
     mavenCentral()
