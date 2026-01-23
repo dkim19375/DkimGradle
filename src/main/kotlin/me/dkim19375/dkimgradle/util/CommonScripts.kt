@@ -25,6 +25,7 @@
 package me.dkim19375.dkimgradle.util
 
 import com.diffplug.gradle.spotless.SpotlessExtension
+import com.diffplug.spotless.kotlin.KtfmtStep
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.github.gradlenexus.publishplugin.NexusPublishExtension
 import java.io.File
@@ -860,13 +861,15 @@ fun Project.setupSpotless(targets: Set<String>? = null) {
     val extension = extensions["spotless"] as SpotlessExtension
     extension.run {
         java {
-            palantirJavaFormat("2.72.0").formatJavadoc(true)
+            palantirJavaFormat("2.85.0").formatJavadoc(true)
             formatAnnotations()
             targets?.let { target(it) }
         }
         kotlin {
-            ktfmt("0.56").kotlinlangStyle().configure {
-                it.setManageTrailingCommas(true)
+            ktfmt("0.61").kotlinlangStyle().configure {
+                it.setTrailingCommaManagementStrategy(
+                    KtfmtStep.TrailingCommaManagementStrategy.COMPLETE
+                )
                 it.setRemoveUnusedImports(true)
             }
             targets?.let { target(it) }

@@ -1,12 +1,12 @@
 [versions]
-dkim-gradle = "1.4.8"
+dkim-gradle = "1.4.9"
 dokkatoo = "2.4.0"
 gradle-plugin-publish = "2.0.0"
 kotlin = "2.3.0"
 licenser = "0.6.1"
 nexus-publish-plugin = "2.0.0"
 shadow = "6.1.0"
-spotless = "7.2.1"
+spotless = "8.2.0"
 
 [libraries]
 licenser = { group = "gradle.plugin.org.cadixdev.gradle", name = "licenser", version.ref = "licenser" }
