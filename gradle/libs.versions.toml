@@ -6,7 +6,7 @@ kotlin = "2.4.10"
 licenser = "0.6.1"
 nexus-publish-plugin = "2.0.0"
 shadow = "6.1.0"
-spotless = "8.10.0"
+spotless = "8.10.2"
 
 [libraries]
 licenser = { group = "gradle.plugin.org.cadixdev.gradle", name = "licenser", version.ref = "licenser" }
